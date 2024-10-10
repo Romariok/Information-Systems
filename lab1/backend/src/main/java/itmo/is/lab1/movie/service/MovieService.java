@@ -9,7 +9,6 @@ import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
 import itmo.is.lab1.coordinates.dto.CoordinatesDTO;
 import itmo.is.lab1.coordinates.model.Coordinates;
 import itmo.is.lab1.location.dto.LocationDTO;
-import itmo.is.lab1.location.model.Location;
 import itmo.is.lab1.movie.dao.MovieRepository;
 import itmo.is.lab1.movie.dto.*;
 import itmo.is.lab1.movie.model.Movie;
@@ -174,16 +173,49 @@ public class MovieService {
       return movieRepository.countMoviesByDirector();
    }
 
-   public List<Movie> getMoviesTaglineContaining(String substring) {
-      return movieRepository.findAllByTaglineContaining(substring);
+   public List<MovieDTO> getMoviesTaglineContaining(String substring) {
+      List<Movie> movies = movieRepository.findAllByTaglineContaining(substring);
+
+      return movies
+            .stream()
+            .map(this::toMovieDTO)
+            .sorted(new Comparator<MovieDTO>() {
+               @Override
+               public int compare(MovieDTO o1, MovieDTO o2) {
+                  return o1.getId().compareTo(o2.getId());
+               }
+            })
+            .toList();
    }
 
-   public List<Movie> findMoviesUsaBoxOfficeLess(long usaBoxOffice) {
-      return movieRepository.findAllByUsaBoxOfficeLessThan(usaBoxOffice);
+   public List<MovieDTO> findMoviesUsaBoxOfficeLess(long usaBoxOffice) {
+      List<Movie> movies = movieRepository.findAllByUsaBoxOfficeLessThan(usaBoxOffice);
+
+      return movies
+            .stream()
+            .map(this::toMovieDTO)
+            .sorted(new Comparator<MovieDTO>() {
+               @Override
+               public int compare(MovieDTO o1, MovieDTO o2) {
+                  return o1.getId().compareTo(o2.getId());
+               }
+            })
+            .toList();
    }
 
-   public List<Movie> findMoviesWithNoOscars() {
-      return movieRepository.findMoviesWithNoOscars();
+   public List<MovieDTO> findMoviesWithNoOscars() {
+      List<Movie> movies = movieRepository.findMoviesWithNoOscars();
+
+      return movies
+            .stream()
+            .map(this::toMovieDTO)
+            .sorted(new Comparator<MovieDTO>() {
+               @Override
+               public int compare(MovieDTO o1, MovieDTO o2) {
+                  return o1.getId().compareTo(o2.getId());
+               }
+            })
+            .toList();
    }
 
    @Transactional

@@ -8,15 +8,20 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 
+@Component
+@RequiredArgsConstructor
 public class JwtAuthTokenFilter extends OncePerRequestFilter {
    private JwtUtils jwtUtils;
 
@@ -46,7 +51,7 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
    }
 
    public UserDetails getUserDetails(HttpServletRequest request) {
-      String jwt = jwtUtils.parseJwt(request);
+      String jwt = parseJwt(request);
 
       if (jwt == null || !jwtUtils.validateJwtToken(jwt))
           return null;
@@ -55,5 +60,14 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
 
       return userDetailsService.loadUserByUsername(username);
   }
+
+  public String parseJwt(HttpServletRequest request) {
+   String headerAuth = request.getHeader("Authorization");
+   String bearerPrefix = "Bearer ";
+   if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(bearerPrefix)){
+       return headerAuth.substring(bearerPrefix.length());}
+
+   return null;
+}
 
 }
