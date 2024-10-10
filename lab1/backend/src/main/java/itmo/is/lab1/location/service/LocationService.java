@@ -7,6 +7,8 @@ import itmo.is.lab1.location.dao.LocationRepository;
 import itmo.is.lab1.location.dto.*;
 import itmo.is.lab1.movie.dao.MovieRepository;
 import itmo.is.lab1.movie.model.Movie;
+import itmo.is.lab1.person.dao.PersonRepository;
+import itmo.is.lab1.person.model.Person;
 import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.Role;
@@ -26,6 +28,7 @@ public class LocationService {
    private final LocationRepository locationRepository;
    private final MovieRepository movieRepository;
    private final UserRepository userRepository;
+   private final PersonRepository personRepository;
    private final JwtUtils jwtUtils;
 
    public List<LocationDTO> getLocations() {
@@ -111,9 +114,14 @@ public class LocationService {
       if (!checkPermission(location, request))
          throw new ForbiddenException(String.format("No access to location with id %d", locationId));
 
-      List<Movie> moviesWithThisLocation = movieRepository.findAllByLocation(location);
+      List<Person> personsWithThisLocation = personRepository.findAllByLocation(location);
 
-      movieRepository.deleteAll(moviesWithThisLocation);
+      for (Person person : personsWithThisLocation) {
+         List<Movie> moviesWithThisPerson = movieRepository.findAllByPerson(person);
+         movieRepository.deleteAll(moviesWithThisPerson);
+      }
+      
+      personRepository.deleteAll(personsWithThisLocation);
       locationRepository.deleteById(locationId);
    }
 

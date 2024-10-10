@@ -1,12 +1,10 @@
 package itmo.is.lab1.movie.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import itmo.is.lab1.movie.model.Movie;
 import itmo.is.lab1.coordinates.model.Coordinates;
-import itmo.is.lab1.location.model.Location;
 import itmo.is.lab1.person.model.Person;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.movie.model.MovieGenre;
@@ -19,8 +17,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
       List<Movie> findAllByCoordinates(Coordinates coordinates);
 
-      List<Movie> findAllByLocation(Location location);
-
+      @Query("SELECT m FROM Movie m WHERE m.operator = :person OR m.director = :person OR m.screenwriter = :person")
       List<Movie> findAllByPerson(Person person);
 
       List<Movie> findAllByUsaBoxOfficeLessThan(long usaBoxOffice);
@@ -28,6 +25,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
       @Query("SELECT m.director, COUNT(m) FROM Movie m GROUP BY m.director")
       List<Object[]> countMoviesByDirector();
 
+      @Query("SELECT m FROM Movie m WHERE m.tagline LIKE %:substring%")
       List<Movie> findAllByTaglineContaining(String substring);
 
       @Query("SELECT m FROM Movie m WHERE m.oscarsCount = 0")
