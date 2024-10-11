@@ -135,12 +135,12 @@ public class PersonService {
    }
 
    private User findUserByRequest(HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       return userRepository.findByUsername(username).get();
    }
 
    private boolean checkPermission(Person person, HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
       return person.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
    }

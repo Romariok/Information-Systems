@@ -126,12 +126,12 @@ public class LocationService {
    }
 
    private User findUserByRequest(HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       return userRepository.findByUsername(username).get();
    }
 
    private boolean checkPermission(Location location, HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
       return location.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
    }

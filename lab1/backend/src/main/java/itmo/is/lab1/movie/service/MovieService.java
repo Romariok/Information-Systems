@@ -306,12 +306,12 @@ public class MovieService {
    }
 
    private User findUserByRequest(HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       return userRepository.findByUsername(username).get();
    }
 
    private boolean checkPermission(Movie movie, HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
       return movie.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
    }
