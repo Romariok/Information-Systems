@@ -102,12 +102,13 @@ public class CoordinatesService {
    }
 
    private User findUserByRequest(HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
+      System.out.println(username);
       return userRepository.findByUsername(username).get();
    }
 
    private boolean checkPermission(Coordinates coordinates, HttpServletRequest request) {
-      String username = jwtUtils.parseJwt(request);
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
       return coordinates.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
    }

@@ -28,7 +28,7 @@ public class Person implements Serializable{
    @Enumerated(EnumType.STRING)
    private Color eyeColor;
 
-   @Column(name = "hair_color", nullable = false)
+   @Column(name = "hair_color")
    @Enumerated(EnumType.STRING)
    private Color hairColor;
 
@@ -39,7 +39,7 @@ public class Person implements Serializable{
    @Column(name = "weight", nullable = false)
    private Long weight;
 
-   @Column(name = "country", nullable = false)
+   @Column(name = "nationality", nullable = false)
    @Enumerated(EnumType.STRING)
    private Country nationality;
    

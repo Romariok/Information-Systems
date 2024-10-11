@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import itmo.is.lab1.security.jwt.JwtAuthEntryPoint;
 import itmo.is.lab1.security.jwt.JwtAuthTokenFilter;
@@ -27,37 +29,40 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-   private final JwtAuthEntryPoint unauthorizedHandler;
+   private final JwtAuthTokenFilter jwtAuthTokenFilter;
 
    private final AuthUserDetailsService userDetailsService;
-
 
    @Bean
    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
       http.csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(request -> {
-               CorsConfiguration corsConfiguration = new CorsConfiguration();
-               corsConfiguration.setAllowedOrigins(List.of("http://localhost:8080"));
-               corsConfiguration.setAllowedMethods(List.of("POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"));
-               corsConfiguration.setAllowCredentials(true);
-               return corsConfiguration;
-            }))
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(request -> request
-                  .requestMatchers("/auth/**", "/user/role/**", "/ws/**").permitAll()
-                  .requestMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
-                  .requestMatchers(HttpMethod.PUT, "/admin/**").hasRole("ADMIN")
-                  .anyRequest().authenticated());
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .exceptionHandling(exception -> exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+         //   .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/user/role/**").permitAll()
+         //         .requestMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
+         //         .requestMatchers(HttpMethod.PUT, "/admin/**").hasRole("ADMIN")
+         //         .anyRequest().authenticated());
 
-      http.authenticationProvider(authenticationProvider())
-            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+      http.authenticationProvider(authenticationProvider());
+      http
+      .userDetailsService(userDetailsService)
+            .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
       return http.build();
    }
+
    @Bean
-   public JwtAuthTokenFilter authenticationJwtTokenFilter() {
-      return new JwtAuthTokenFilter();
+   public CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+      configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+      configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+      configuration.setAllowCredentials(true);
+
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", configuration);
+      return source;
    }
 
    @Bean

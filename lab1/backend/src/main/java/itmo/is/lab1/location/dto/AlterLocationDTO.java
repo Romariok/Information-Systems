@@ -1,6 +1,7 @@
 package itmo.is.lab1.location.dto;
 
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 import lombok.*;
@@ -11,12 +12,15 @@ import lombok.*;
 @Setter
 public class AlterLocationDTO {
    @Max(100)
+   @Min(-100)
    private Double x;
 
    @Max(100)
+   @Min(-100)
    private long y;
 
    @Max(100)
+   @Min(-100)
    private Integer z;
 
    @NotBlank

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import itmo.is.lab1.person.dto.*;
 import itmo.is.lab1.person.service.PersonService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class PersonController {
    }
 
    @PostMapping
-   public PersonDTO createPerson(@RequestBody CreatePersonDTO createPersonDTO, HttpServletRequest request) {
+   public PersonDTO createPerson(@RequestBody @Valid CreatePersonDTO createPersonDTO, HttpServletRequest request) {
       return personService.createPerson(createPersonDTO, request);
    }
 
