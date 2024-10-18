@@ -12,8 +12,8 @@ import itmo.is.lab1.user.dto.LoginUserDTO;
 import itmo.is.lab1.user.dto.RegisterUserDTO;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
-import itmo.is.lab1.utils.UserAlreadyExistException;
-import itmo.is.lab1.utils.UserNotFoundException;
+import itmo.is.lab1.utils.exceptions.UserAlreadyExistException;
+import itmo.is.lab1.utils.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service

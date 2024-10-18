@@ -18,8 +18,8 @@ public class PersonController {
    private final PersonService personService;
 
    @GetMapping
-   public List<PersonDTO> getPerson() {
-      return personService.getPerson();
+   public List<PersonDTO> getPerson(@RequestParam int from, @RequestParam int size) {
+      return personService.getPerson(from, size);
    }
 
    @PostMapping

@@ -3,8 +3,11 @@ package itmo.is.lab1.coordinates.service;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
 import itmo.is.lab1.coordinates.dto.*;
 import itmo.is.lab1.coordinates.model.Coordinates;
@@ -14,7 +17,7 @@ import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.user.model.Role;
-import itmo.is.lab1.utils.*;
+import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -25,9 +28,11 @@ public class CoordinatesService {
    private final MovieRepository movieRepository;
    private final UserRepository userRepository;
    private final JwtUtils jwtUtils;
+   private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<CoordinatesDTO> getCoordinates() {
-      List<Coordinates> coordinates = coordinatesRepository.findAll();
+   public List<CoordinatesDTO> getCoordinates(int from, int size) {
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<Coordinates> coordinates = coordinatesRepository.findAll(page).getContent();
       return coordinates
             .stream()
             .map(coordinates1 -> new CoordinatesDTO(
@@ -61,6 +66,7 @@ public class CoordinatesService {
             .build();
 
       coordinates = coordinatesRepository.save(coordinates);
+      simpMessagingTemplate.convertAndSend("/topic", "New coordinates added");
       return new CoordinatesDTO(
             coordinates.getId(),
             coordinates.getX(),
@@ -80,6 +86,7 @@ public class CoordinatesService {
          coordinates.setX(alterCoordinatesDTO.getX());
 
       coordinates = coordinatesRepository.save(coordinates);
+      simpMessagingTemplate.convertAndSend("/topic", "Coordinates updated");
 
       return new CoordinatesDTO(
             coordinates.getId(),
@@ -99,6 +106,7 @@ public class CoordinatesService {
 
       movieRepository.deleteAll(moviesWithThisCoordinates);
       coordinatesRepository.deleteById(coordinatesId);
+      simpMessagingTemplate.convertAndSend("/topic", "Coordinates deleted");
    }
 
    private User findUserByRequest(HttpServletRequest request) {

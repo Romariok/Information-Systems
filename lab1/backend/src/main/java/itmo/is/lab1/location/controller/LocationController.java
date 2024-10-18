@@ -16,8 +16,8 @@ public class LocationController {
    private final LocationService locationService;
 
    @GetMapping
-   public List<LocationDTO> getLocations() {
-      return locationService.getLocations();
+   public List<LocationDTO> getLocations(@RequestParam int from, @RequestParam int size) {
+      return locationService.getLocations(from, size);
    }
 
    @PostMapping

@@ -1,8 +1,11 @@
 package itmo.is.lab1.location.service;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.location.model.Location;
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.location.dao.LocationRepository;
 import itmo.is.lab1.location.dto.*;
 import itmo.is.lab1.movie.dao.MovieRepository;
@@ -13,9 +16,7 @@ import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
-import itmo.is.lab1.utils.LocationNotFoundException;
-import itmo.is.lab1.utils.ForbiddenException;
-import itmo.is.lab1.utils.LocationAlreadyExistException;
+import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -30,9 +31,11 @@ public class LocationService {
    private final UserRepository userRepository;
    private final PersonRepository personRepository;
    private final JwtUtils jwtUtils;
+   private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<LocationDTO> getLocations() {
-      List<Location> location = locationRepository.findAll();
+   public List<LocationDTO> getLocations(int from, int size) {
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<Location> location = locationRepository.findAll(page).getContent();
       return location
             .stream()
             .map(location1 -> new LocationDTO(
@@ -72,6 +75,7 @@ public class LocationService {
             .build();
 
       location = locationRepository.save(location);
+      simpMessagingTemplate.convertAndSend("/topic", "New location added");
       return new LocationDTO(
             location.getId(),
             location.getX(),
@@ -97,6 +101,7 @@ public class LocationService {
          location.setName(alterLocationDTO.getName());
 
       location = locationRepository.save(location);
+      simpMessagingTemplate.convertAndSend("/topic", "Location updated");
 
       return new LocationDTO(
             location.getId(),
@@ -123,6 +128,7 @@ public class LocationService {
       
       personRepository.deleteAll(personsWithThisLocation);
       locationRepository.deleteById(locationId);
+      simpMessagingTemplate.convertAndSend("/topic", "Location deleted");
    }
 
    private User findUserByRequest(HttpServletRequest request) {
