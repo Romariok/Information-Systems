@@ -3,8 +3,11 @@ package itmo.is.lab1.movie.service;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
 import itmo.is.lab1.coordinates.dto.CoordinatesDTO;
 import itmo.is.lab1.coordinates.model.Coordinates;
@@ -20,9 +23,7 @@ import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
-import itmo.is.lab1.utils.CoordinatesNotFoundException;
-import itmo.is.lab1.utils.ForbiddenException;
-import itmo.is.lab1.utils.PersonNotFoundException;
+import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +36,11 @@ public class MovieService {
    private final UserRepository userRepository;
    private final MovieRepository movieRepository;
    private final JwtUtils jwtUtils;
+   private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<MovieDTO> getMovie() {
-      List<Movie> movie = movieRepository.findAll();
+   public List<MovieDTO> getMovie(int from, int size) {
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<Movie> movie = movieRepository.findAll(page).getContent();
       return movie
             .stream()
             .map(this::toMovieDTO)
@@ -96,6 +99,7 @@ public class MovieService {
             .build();
 
       movie = movieRepository.save(movie);
+      simpMessagingTemplate.convertAndSend("/topic", "New Movie created");
 
       return toMovieDTO(movie);
    }
@@ -157,6 +161,7 @@ public class MovieService {
          movie.setGenre(alterMovieDTO.getGenre());
 
       movie = movieRepository.save(movie);
+      simpMessagingTemplate.convertAndSend("/topic", "Movie updated");
       return toMovieDTO(movie);
    }
 
@@ -167,6 +172,7 @@ public class MovieService {
       if (!checkPermission(movie, request))
          throw new ForbiddenException(String.format("No access to movie with id %s", movieId));
       movieRepository.delete(movie);
+      simpMessagingTemplate.convertAndSend("/topic", "Movie deleted");
    }
 
    public List<Object[]> countMoviesByDirector() {

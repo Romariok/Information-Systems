@@ -18,8 +18,8 @@ public class MovieController {
    private final MovieService movieService;
 
    @GetMapping
-   public List<MovieDTO> getMovie() {
-      return movieService.getMovie();
+   public List<MovieDTO> getMovie(@RequestParam int from, @RequestParam int size) {
+      return movieService.getMovie(from, size);
    }
 
    @GetMapping("/count/director")

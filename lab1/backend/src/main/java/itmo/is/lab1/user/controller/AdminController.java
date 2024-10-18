@@ -16,8 +16,8 @@ public class AdminController {
    private final AdminService adminService;
 
    @GetMapping
-   public List<AdminRequestDTO> getAdminRequests() {
-      return adminService.getAdminRequests();
+   public List<AdminRequestDTO> getAdminRequests(@RequestParam int from, @RequestParam int size) {
+      return adminService.getAdminRequests(from, size);
    }
 
    @PostMapping

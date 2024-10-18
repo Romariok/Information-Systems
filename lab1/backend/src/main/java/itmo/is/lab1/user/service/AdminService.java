@@ -3,18 +3,19 @@ package itmo.is.lab1.user.service;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.user.model.AdminRequest;
 import itmo.is.lab1.user.model.Role;
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.AdminRequestRepository;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.dto.AdminRequestDTO;
 import itmo.is.lab1.user.model.User;
-import itmo.is.lab1.utils.AdminRequestAlreadyExistException;
-import itmo.is.lab1.utils.AdminRequestNotFoundException;
-import itmo.is.lab1.utils.UserAlreadyAdminException;
+import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -24,9 +25,11 @@ public class AdminService {
    private final UserRepository userRepository;
    private final JwtUtils jwtUtils;
    private final AdminRequestRepository adminRequestRepository;
+   private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<AdminRequestDTO> getAdminRequests() {
-      List<AdminRequest> adminRequests = adminRequestRepository.findAll();
+   public List<AdminRequestDTO> getAdminRequests(int from, int size) {
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<AdminRequest> adminRequests = adminRequestRepository.findAll(page).getContent();
 
       return adminRequests
             .stream()
@@ -50,6 +53,7 @@ public class AdminService {
       userRepository.save(fromUser);
 
       adminRequestRepository.delete(adminJoinRequest);
+      simpMessagingTemplate.convertAndSend("/topic", "Admin Request approved");
    }
 
    public void createAdminRequest(HttpServletRequest request) {
@@ -58,6 +62,7 @@ public class AdminService {
       if (userRepository.findAllByRole(Role.ADMIN).isEmpty()) {
          fromUser.setRole(Role.ADMIN);
          userRepository.save(fromUser);
+         simpMessagingTemplate.convertAndSend("/topic", "New Admin Created");
          return;
       }
 
@@ -70,7 +75,7 @@ public class AdminService {
       AdminRequest adminRequest = new AdminRequest(null, fromUser);
 
       adminRequestRepository.save(adminRequest);
-
+      simpMessagingTemplate.convertAndSend("/topic", "Admin Request created");
    }
 
    private User findUserByRequest(HttpServletRequest request) {

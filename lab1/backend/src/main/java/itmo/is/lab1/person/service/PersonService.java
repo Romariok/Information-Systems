@@ -1,9 +1,12 @@
 package itmo.is.lab1.person.service;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.location.dto.LocationDTO;
 import itmo.is.lab1.location.model.Location;
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.location.dao.LocationRepository;
 import itmo.is.lab1.movie.dao.MovieRepository;
 import itmo.is.lab1.movie.model.Movie;
@@ -14,9 +17,7 @@ import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
-import itmo.is.lab1.utils.LocationNotFoundException;
-import itmo.is.lab1.utils.PersonNotFoundException;
-import itmo.is.lab1.utils.ForbiddenException;
+import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -31,9 +32,11 @@ public class PersonService {
    private final MovieRepository movieRepository;
    private final UserRepository userRepository;
    private final JwtUtils jwtUtils;
+   private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<PersonDTO> getPerson() {
-      List<Person> person = personRepository.findAll();
+   public List<PersonDTO> getPerson(int from, int size) {
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<Person> person = personRepository.findAll(page).getContent();
       return person
             .stream()
             .map(this::toPersonDTO)
@@ -66,6 +69,7 @@ public class PersonService {
             .build();
 
       person = personRepository.save(person);
+      simpMessagingTemplate.convertAndSend("/topic", "New Person added");
       return toPersonDTO(person);
    }
 
@@ -97,6 +101,7 @@ public class PersonService {
       }
 
       person = personRepository.save(person);
+      simpMessagingTemplate.convertAndSend("/topic", "Person updated");
       return toPersonDTO(person);
    }
 
@@ -112,6 +117,7 @@ public class PersonService {
 
       movieRepository.deleteAll(moviesWithThisPerson);
       personRepository.deleteById(personId);
+      simpMessagingTemplate.convertAndSend("/topic", "Person deleted");
    }
 
    private PersonDTO toPersonDTO(Person person) {

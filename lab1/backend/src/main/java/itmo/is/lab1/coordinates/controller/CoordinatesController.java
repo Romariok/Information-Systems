@@ -1,8 +1,5 @@
 package itmo.is.lab1.coordinates.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import itmo.is.lab1.coordinates.dto.*;
 import itmo.is.lab1.coordinates.service.CoordinatesService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,8 +16,8 @@ public class CoordinatesController {
    private final CoordinatesService coordinatesService;
 
    @GetMapping
-   public List<CoordinatesDTO> getCoordinates() {
-      return coordinatesService.getCoordinates();
+   public List<CoordinatesDTO> getCoordinates(@RequestParam int from, @RequestParam int size) {
+      return coordinatesService.getCoordinates(from, size);
    }
 
    @PostMapping
