@@ -18,5 +18,6 @@ public class PersonDTO {
    private LocationDTO location;
    private Long weight;
    private Country nationality;
+   private Boolean adminCanModify;
    private Long userId;
 }

@@ -24,5 +24,7 @@ public class AlterPersonDTO {
    @Positive  
    private Long weight;
 
+   private Boolean adminCanModify;
+
    private Country nationality;
 }

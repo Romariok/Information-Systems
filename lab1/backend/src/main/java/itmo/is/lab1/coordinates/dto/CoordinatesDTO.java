@@ -8,5 +8,6 @@ public class CoordinatesDTO {
    private Long id;
    private Double x;
    private long y;
+   private Boolean adminCanModify;
    private Long userId;
 }

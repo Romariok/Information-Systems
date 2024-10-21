@@ -95,6 +95,7 @@ public class MovieService {
             .usaBoxOffice(createMovieDTO.getUsaBoxOffice())
             .tagline(createMovieDTO.getTagline())
             .genre(createMovieDTO.getGenre())
+            .adminCanModify(createMovieDTO.getAdminCanModify())
             .user(user)
             .build();
 
@@ -245,6 +246,7 @@ public class MovieService {
                   movie.getCoordinates().getId(),
                   movie.getCoordinates().getX(),
                   movie.getCoordinates().getY(),
+                  movie.getCoordinates().getAdminCanModify(),
                   movie.getCoordinates().getUser().getId()))
             .creationDate(movie.getCreationDate())
             .oscarsCount(movie.getOscarsCount())
@@ -263,6 +265,7 @@ public class MovieService {
                         movie.getDirector().getLocation().getY(),
                         movie.getDirector().getLocation().getZ(),
                         movie.getDirector().getLocation().getName(),
+                        movie.getDirector().getLocation().getAdminCanModify(),
                         movie.getDirector().getLocation().getUser().getId()))
                   .weight(movie.getDirector().getWeight())
                   .nationality(movie.getDirector().getNationality())
@@ -280,6 +283,7 @@ public class MovieService {
                         movie.getScreenwriter().getLocation().getY(),
                         movie.getScreenwriter().getLocation().getZ(),
                         movie.getScreenwriter().getLocation().getName(),
+                        movie.getScreenwriter().getLocation().getAdminCanModify(),
                         movie.getScreenwriter().getLocation().getUser().getId()))
                   .weight(movie.getScreenwriter().getWeight())
                   .nationality(movie.getScreenwriter().getNationality())
@@ -297,6 +301,7 @@ public class MovieService {
                         movie.getOperator().getLocation().getY(),
                         movie.getOperator().getLocation().getZ(),
                         movie.getOperator().getLocation().getName(),
+                        movie.getOperator().getLocation().getAdminCanModify(),
                         movie.getOperator().getLocation().getUser().getId()))
                   .weight(movie.getOperator().getWeight())
                   .nationality(movie.getOperator().getNationality())
@@ -307,6 +312,7 @@ public class MovieService {
             .usaBoxOffice(movie.getUsaBoxOffice())
             .tagline(movie.getTagline())
             .genre(movie.getGenre())
+            .adminCanModify(movie.getAdminCanModify())
             .userId(movie.getUser().getId())
             .build();
    }
@@ -319,6 +325,7 @@ public class MovieService {
    private boolean checkPermission(Movie movie, HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
-      return movie.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
+      return movie.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN &&
+            movie.getAdminCanModify();
    }
 }

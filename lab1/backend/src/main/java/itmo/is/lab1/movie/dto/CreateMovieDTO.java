@@ -56,4 +56,7 @@ public class CreateMovieDTO {
 
    private String tagline;
    private MovieGenre genre;
+
+   @NotNull
+   private Boolean adminCanModify;
 }

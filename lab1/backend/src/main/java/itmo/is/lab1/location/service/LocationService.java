@@ -44,6 +44,7 @@ public class LocationService {
                   location1.getY(),
                   location1.getZ(),
                   location1.getName(),
+                  location1.getAdminCanModify(),
                   location1.getUser().getId()))
             .sorted(new Comparator<LocationDTO>() {
                @Override
@@ -70,6 +71,7 @@ public class LocationService {
             .x(createLocationDTO.getX())
             .y(createLocationDTO.getY())
             .z(createLocationDTO.getZ())
+            .adminCanModify(createLocationDTO.getAdminCanModify())
             .name(createLocationDTO.getName())
             .user(user)
             .build();
@@ -82,6 +84,7 @@ public class LocationService {
             location.getY(),
             location.getZ(),
             location.getName(),
+            location.getAdminCanModify(),
             location.getUser().getId());
    }
 
@@ -109,6 +112,7 @@ public class LocationService {
             location.getY(),
             location.getZ(),
             location.getName(),
+            location.getAdminCanModify(),
             location.getUser().getId());
    }
 
@@ -139,6 +143,7 @@ public class LocationService {
    private boolean checkPermission(Location location, HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
-      return location.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
+      return location.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN &&
+            location.getAdminCanModify();
    }
 }

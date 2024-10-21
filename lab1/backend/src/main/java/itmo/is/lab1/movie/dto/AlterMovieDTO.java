@@ -50,4 +50,6 @@ public class AlterMovieDTO {
 
    private String tagline;
    private MovieGenre genre;
+
+   private Boolean adminCanModify;
 }

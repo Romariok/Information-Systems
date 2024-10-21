@@ -17,4 +17,6 @@ public class AlterCoordinatesDTO {
    @Max(500)
    @Min(-500)
    private long y;
+
+   private Boolean adminCanModify;
 }

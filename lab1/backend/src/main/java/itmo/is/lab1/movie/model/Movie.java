@@ -74,6 +74,9 @@ public class Movie implements Serializable{
    @Enumerated(EnumType.STRING)
    private MovieGenre genre;
 
+   @Column(name = "admin_can_modify", nullable = false)
+   private Boolean adminCanModify;
+
    @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "user_id")
    private User user;

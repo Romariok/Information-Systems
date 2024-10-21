@@ -30,5 +30,8 @@ public class CreatePersonDTO {
    private Long weight;
 
    @NotNull
+   private Boolean adminCanModify;
+
+   @NotNull
    private Country nationality;
 }

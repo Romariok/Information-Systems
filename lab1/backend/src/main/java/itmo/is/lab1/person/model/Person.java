@@ -42,6 +42,9 @@ public class Person implements Serializable{
    @Column(name = "nationality", nullable = false)
    @Enumerated(EnumType.STRING)
    private Country nationality;
+
+   @Column(name = "admin_can_modify", nullable = false)
+   private Boolean adminCanModify;
    
    @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "user_id")
