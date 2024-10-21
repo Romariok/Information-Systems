@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import List from '@mui/material/List';
 import Box from '@mui/material/Box';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -13,10 +14,8 @@ import {
   Link,
   Route,
   Routes,
-  MemoryRouter,
-  useLocation,
+  BrowserRouter as Router,
 } from 'react-router-dom';
-import { StaticRouter } from 'react-router-dom/server';
 import { Grid, Typography } from '@mui/material';
 
 import Error from './pages/Error.tsx'
@@ -30,19 +29,6 @@ import CoordinatesTable from './assets/components/CoordinatesTable.tsx';
 import LocationsTable from './assets/components/LocationTable.tsx';
 import PersonTable from './assets/components/PersonTable.tsx';
 import AdminRequestTable from './assets/components/AdminRequestTable.tsx';
-
-function Router(props: { children?: React.ReactNode }) {
-  const { children } = props;
-  if (typeof window === 'undefined') {
-    return <StaticRouter location="/error">{children}</StaticRouter>;
-  }
-
-  return (
-    <MemoryRouter initialEntries={['/app']} initialIndex={0}>
-      {children}
-    </MemoryRouter>
-  );
-}
 
 interface ListItemLinkProps {
   icon?: React.ReactElement<unknown>;
@@ -68,11 +54,10 @@ const switchPlay = () => {
 }
 
 function App() {
-
   return (
     <Router>
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <Paper elevation={0} >
+        <Paper elevation={1} >
           <List aria-label="main sections" sx={{
             color: 'white',
             backgroundColor: 'black',
