@@ -27,4 +27,6 @@ public class CreateLocationDTO {
 
    @NotBlank
    private String name;
+   @NotNull
+   private Boolean adminCanModify;
 }

@@ -26,6 +26,9 @@ public class Coordinates{
    @Column(name = "y")
    private long y;
 
+   @Column(name = "admin_can_modify", nullable = false)
+   private Boolean adminCanModify;
+
    @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "user_id")
    private User user;

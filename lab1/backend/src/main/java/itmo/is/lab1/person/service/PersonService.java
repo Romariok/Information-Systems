@@ -66,6 +66,7 @@ public class PersonService {
             .weight(createPersonDTO.getWeight())
             .nationality(createPersonDTO.getNationality())
             .user(user)
+            .adminCanModify(createPersonDTO.getAdminCanModify())
             .build();
 
       person = personRepository.save(person);
@@ -133,9 +134,11 @@ public class PersonService {
                   person.getLocation().getY(),
                   person.getLocation().getZ(),
                   person.getLocation().getName(),
+                  person.getLocation().getAdminCanModify(),
                   person.getLocation().getUser().getId()))
             .weight(person.getWeight())
             .nationality(person.getNationality())
+            .adminCanModify(person.getAdminCanModify())
             .userId(person.getUser().getId())
             .build();
    }
@@ -148,6 +151,7 @@ public class PersonService {
    private boolean checkPermission(Person person, HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
-      return person.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
+      return person.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN &&
+            person.getAdminCanModify();
    }
 }

@@ -32,6 +32,9 @@ public class Location implements Serializable{
    @Column(name = "name", nullable = false)
    private String name;
 
+   @Column(name = "admin_can_modify", nullable = false)
+   private Boolean adminCanModify;
+
    @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "user_id")
    private User user;

@@ -20,4 +20,7 @@ public class CreateCoordinatesDTO {
    @Max(500)
    @Min(-500)
    private long y;
+
+   @NotNull
+   private Boolean adminCanModify;
 }

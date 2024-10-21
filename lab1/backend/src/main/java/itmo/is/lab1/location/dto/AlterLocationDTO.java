@@ -25,4 +25,6 @@ public class AlterLocationDTO {
 
    @NotBlank
    private String name;
+
+   private Boolean adminCanModify;
 }

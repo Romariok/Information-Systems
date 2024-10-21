@@ -39,14 +39,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .exceptionHandling(exception -> exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-         //   .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/user/role/**").permitAll()
-         //         .requestMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
-         //         .requestMatchers(HttpMethod.PUT, "/admin/**").hasRole("ADMIN")
-         //         .anyRequest().authenticated());
+            // .authorizeHttpRequests(auth -> auth.requestMatchers("/index.html", "/favicon.ico", "/static/**").permitAll()
+            //       .requestMatchers("/auth/**", "/user/role/**", "/ws", "/").permitAll()
+            //       .requestMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
+            //       .requestMatchers(HttpMethod.PUT, "/admin/**").hasRole("ADMIN")
+            //       .anyRequest().authenticated());
 
       http.authenticationProvider(authenticationProvider());
       http
-      .userDetailsService(userDetailsService)
+            .userDetailsService(userDetailsService)
             .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
       return http.build();
@@ -57,7 +58,7 @@ public class SecurityConfig {
       CorsConfiguration configuration = new CorsConfiguration();
       configuration.setAllowedOrigins(List.of("http://localhost:5173"));
       configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-      configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+      configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "from", "size"));
       configuration.setAllowCredentials(true);
 
       UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -28,5 +28,6 @@ public class MovieDTO {
    private long usaBoxOffice;
    private String tagline;
    private MovieGenre genre;
+   private Boolean adminCanModify;
    private Long userId;
 }

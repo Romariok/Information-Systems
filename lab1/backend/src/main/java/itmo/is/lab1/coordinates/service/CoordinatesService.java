@@ -39,6 +39,7 @@ public class CoordinatesService {
                   coordinates1.getId(),
                   coordinates1.getX(),
                   coordinates1.getY(),
+                  coordinates1.getAdminCanModify(),
                   coordinates1.getUser().getId()))
             .sorted(new Comparator<CoordinatesDTO>() {
                @Override
@@ -63,6 +64,7 @@ public class CoordinatesService {
             .x(createCoordinatesDTO.getX())
             .y(createCoordinatesDTO.getY())
             .user(user)
+            .adminCanModify(createCoordinatesDTO.getAdminCanModify())
             .build();
 
       coordinates = coordinatesRepository.save(coordinates);
@@ -71,6 +73,7 @@ public class CoordinatesService {
             coordinates.getId(),
             coordinates.getX(),
             coordinates.getY(),
+            coordinates.getAdminCanModify(),
             coordinates.getUser().getId());
    }
 
@@ -92,6 +95,7 @@ public class CoordinatesService {
             coordinates.getId(),
             coordinates.getX(),
             coordinates.getY(),
+            coordinates.getAdminCanModify(),
             coordinates.getUser().getId());
    }
 
@@ -111,13 +115,14 @@ public class CoordinatesService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      System.out.println(username);
+      System.out.println("Username: " + username);
       return userRepository.findByUsername(username).get();
    }
 
    private boolean checkPermission(Coordinates coordinates, HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       User fromUser = userRepository.findByUsername(username).get();
-      return coordinates.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN;
+      return coordinates.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN &&
+            coordinates.getAdminCanModify();
    }
 }
