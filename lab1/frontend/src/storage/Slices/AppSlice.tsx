@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import { RootState } from "../store";
 import { MovieGenre, MpaaRating } from "../../assets/components/MovieTable";
@@ -9,17 +9,20 @@ import { CoordinatesArray } from "../../assets/components/CoordinatesTable";
 import { AdminRequestArray } from "../../assets/components/AdminRequestTable";
 import { MovieArray } from "../../assets/components/MovieTable";
 import { PersonArray } from "../../assets/components/PersonTable";
+import { ElevatorSharp } from "@mui/icons-material";
 
 interface ICoordinate {
    id: number,
    x: number,
    y: number,
+   adminCanModify: boolean,
    userId: number;
 }
 
 export interface ISendCoordinate {
    x: number,
    y: number | null
+   adminCanModify: boolean
 }
 
 interface IAdminRequest {
@@ -105,28 +108,28 @@ interface AppState {
    isFetching: boolean,
    isSuccess: boolean,
    isError: boolean,
+   isAuth: boolean,
    errorMessage: string,
    locations: LocationsArray,
    persons: PersonArray,
    movies: MovieArray,
    adminRequest: AdminRequestArray,
-   coordinates: CoordinatesArray
+   coordinates: CoordinatesArray,
+   coordinatesPage: number
 }
 
 export const getCoordinates = createAsyncThunk<
    any,
-   void,
+   number,
    { rejectValue: string }
 >(
    "app/getCoordinates",
-   async (_, thunkAPI) => {
+   async (page, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
          const link = "http://localhost:8080/coordinates";
 
-         const response = await axios.get<ICoordinate[]>(link, {
-            headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
-         });
+         const response = await axios.get<ICoordinate[]>(link, { params: { from: page * 10, size: 10 } });
          const data = response.data;
          if (response.status === 200) {
             return data;
@@ -259,17 +262,18 @@ export const sendCoordinates = createAsyncThunk<
    { rejectValue: string }
 >(
    "app/coordinates/sendCoordinates",
-   async ({ x, y }, thunkAPI) => {
+   async ({ x, y, adminCanModify }, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
          const link = "http://localhost:8080/coordinates";
          const params = {
             x,
-            y
+            y,
+            adminCanModify
          };
          const response = await axios.post(link, params, {
             headers: {
-               "Authorization": 'Bearer '+String(localStorage.getItem('token'))
+               "Authorization": 'Bearer ' + String(localStorage.getItem('token'))
             }
          });
          const data = response.data;
@@ -436,12 +440,14 @@ const initialState: AppState = {
    isFetching: false,
    isSuccess: false,
    isError: false,
+   isAuth: false,
    errorMessage: "",
    locations: [] as LocationsArray,
    persons: [] as PersonArray,
    movies: [] as MovieArray,
    adminRequest: [] as AdminRequestArray,
-   coordinates: [] as CoordinatesArray
+   coordinates: [] as CoordinatesArray,
+   coordinatesPage: 0,
 };
 
 export const AppSlice = createSlice({
@@ -452,38 +458,49 @@ export const AppSlice = createSlice({
          state.isError = false;
          state.isSuccess = false;
          state.isFetching = false;
+         if (localStorage.getItem('token')?.length > 0) {
+            state.isAuth = true;
+         }
+         else {
+            state.isAuth = false;
+         }
          return state
       },
       clearAllStates: (state) => {
+         state.isAuth = false;
          state.isError = false;
          state.isSuccess = false;
          state.isFetching = false;
          state.errorMessage = "";
-         state.locations = [] as LocationsArray;
-         state.persons = [] as PersonArray;
-         state.movies = [] as MovieArray;
-         state.adminRequest = [] as AdminRequestArray;
-         state.coordinates = [] as CoordinatesArray
+         localStorage.removeItem('token');
+      },
+      setCoordinatesPage: (state, action) => {
+         state.coordinatesPage = action.payload;
       }
    },
    extraReducers: (builder) => {
       builder
-         .addCase(sendCoordinates.fulfilled, (state, action: PayloadAction<ICoordinate[]>) => {
+         .addCase(sendCoordinates.fulfilled, (state) => {
             state.isFetching = false;
-            console.log("do");
-            state.coordinates = action.payload as ICoordinate[];
-            console.log("posle");
-            return state; 
+            return state;
          })
          .addCase(sendCoordinates.rejected, (state, action) => {
             state.isFetching = false;
             state.isError = true;
-            state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            if (action?.payload?.status == 500) {
+               state.errorMessage = "You have no rights to commit this!";
+            }
+            else if (action?.payload?.status == 400){
+               state.errorMessage = "Invalid parameters!";
+            }
+            else {
+               state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            }
          })
          .addCase(sendCoordinates.pending, (state) => {
             state.isFetching = true;
          })
-         .addCase(getCoordinates.fulfilled, (state, action: PayloadAction<ICoordinate>) => {
+         .addCase(getCoordinates.fulfilled, (state, action) => {
             state.isFetching = false;
             state.coordinates = [];
             state.coordinates.push(action.payload);
@@ -501,7 +518,7 @@ export const AppSlice = createSlice({
    }
 })
 
-export const { clearState, clearAllStates } = AppSlice.actions;
+export const { clearState, clearAllStates, setCoordinatesPage } = AppSlice.actions;
 
 export const appSelector = (state: RootState) => state.app;
 

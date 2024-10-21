@@ -4,9 +4,10 @@ import {
    Input,
    Modal,
    Snackbar,
-   Alert
+   Alert,
+   Checkbox
 } from '@mui/material';
-import { appSelector, clearState, getCoordinates, sendCoordinates } from "../../storage/Slices/AppSlice";
+import { appSelector, clearState, sendCoordinates } from "../../storage/Slices/AppSlice";
 import { useDispatch, useSelector } from 'react-redux';
 import { ISendCoordinate } from "../../storage/Slices/AppSlice";
 import StyleButton from './StyleButton';
@@ -20,7 +21,8 @@ interface CoordinateFormProps {
 
 interface FormData {
    x: string;
-   y: string|null;
+   y: string | null;
+   adminCanModify: boolean;
 }
 
 
@@ -30,14 +32,16 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
    const [openError, setOpenError] = useState<boolean>(false);
    const [formData, setFormData] = useState<FormData>({
       x: '',
-      y: ''
+      y: '',
+      adminCanModify: false
    });
 
    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const newData = {
          x: Number(formData.x),
-         y: formData.y === '' ? null : Number(formData.y)
+         y: formData.y === '' ? null : Number(formData.y),
+         adminCanModify: formData.adminCanModify
       };
       dispatch(sendCoordinates(newData as ISendCoordinate));
    };
@@ -52,22 +56,21 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
 
    useEffect(() => {
       if (isError) {
-        console.log("Error: " + errorMessage);
-        setOpenError(true);
-        const timer = setTimeout(() => {
-          setOpenError(false);
-          dispatch(clearState());
-        }, 3000);
-        return () => clearTimeout(timer);
+         console.log("Error: " + errorMessage);
+         setOpenError(true);
+         const timer = setTimeout(() => {
+            setOpenError(false);
+            dispatch(clearState());
+         }, 3000);
+         return () => clearTimeout(timer);
       }
-    
+
       if (isSuccess) {
-        console.log("Coordinate Succesfully Created");
-        onClose();
-        dispatch(clearState());
-        dispatch(getCoordinates());
+         console.log("Coordinate Succesfully Created");
+         onClose();
+         dispatch(clearState());
       }
-      }, [isError, isSuccess, dispatch]);
+   }, [isError, isSuccess, dispatch]);
 
    return (
       <>
@@ -132,6 +135,29 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   inputProps={{ min: -500, max: 500 }}
                   placeholder='Y in (-500;500)'
                />
+               <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center'
+               }}>
+                  <Checkbox
+                     required
+                     id="adminCanModify"
+                     name="adminCanModify"
+                     autoFocus
+                     value={formData.adminCanModify}
+                     onChange={(e) => formData.adminCanModify = e.target.checked} 
+                     sx={{ color: 'white', mb: 1 }}
+                  />
+                  <label style={{
+                     fontFamily: "Undertale",
+                     backgroundColor: 'black',
+                     color: 'white'
+                  }}>
+                     ADMIN CAN MODIFY
+                  </label>
+               </Box>
+
 
                <StyleButton text="Create coordinate"
                   disabled={isFetching}
