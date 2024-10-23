@@ -1,12 +1,10 @@
 import {
   Link,
-  Route,
-  Routes,
-  BrowserRouter as Router,
+
 } from 'react-router-dom';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { appSelector, clearAllStates, clearState, getCoordinates, setCoordinatesPage } from "../storage/Slices/AppSlice";
+import { appSelector, clearState, getCoordinates, getLocation, getPerson, setCoordinatesPage } from "../storage/Slices/AppSlice";
 
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
@@ -23,7 +21,6 @@ import MovieCreationIcon from '@mui/icons-material/MovieCreation';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { AppDispatch } from '../storage/store';
 import React, { useEffect } from 'react';
-import StyleButton from '../assets/components/StyleButton';
 
 interface ListItemLinkProps {
   icon?: React.ReactElement<unknown>;
@@ -50,12 +47,15 @@ const switchPlay = () => {
 
 function MainPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isFetching, isAuth, coordinatesPage } = useSelector(appSelector);
+  const { coordinatesPage, locationPage, personPage, moviePage } = useSelector(appSelector);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
       dispatch(clearState());
       dispatch(getCoordinates(coordinatesPage));
+      dispatch(getLocation(locationPage));
+      dispatch(getPerson(personPage));
       const sock = new SockJS("http://localhost:8080/ws");
       const stompClient = Stomp.over(sock);
       stompClient.connect({
@@ -65,7 +65,8 @@ function MainPage() {
       }, () => {
         stompClient.subscribe("/topic", (message) => {
           dispatch(getCoordinates(coordinatesPage));
-          dispatch(setCoordinatesPage(0));
+          dispatch(getLocation(locationPage));
+          dispatch(getPerson(personPage));
         },
           {
             "Authorization": `Bearer ${localStorage.getItem('token')}`,
@@ -100,19 +101,6 @@ function MainPage() {
               <ListItemLink to="/app/person" primary="Special Functions" icon={<PersonAddIcon color='primary' />} />
             </Grid>
           </Grid>
-          <label style={{
-            fontFamily: "Undertale",
-            backgroundColor: 'black',
-            color: 'white'
-          }}>
-            LOGIN STATUS: <label style={{ color: "orange" }}>{isAuth ? "LOGGED IN" : "NOT LOGGED IN"}</label>
-          </label>
-          <StyleButton text="LOGOUT"
-            disabled={!isAuth}
-            onclick={() => {
-              dispatch(clearAllStates());
-            }}
-            type="button" />
 
         </List>
       </Paper>

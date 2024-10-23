@@ -67,6 +67,11 @@ interface SigninResponse {
        state.isSuccess = false;
        state.isFetching = false;
        state.errorMessage = "";
+     },
+     clearUserData: (state) => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('role');
      }
    },
    extraReducers: (builder) => {
@@ -76,6 +81,8 @@ interface SigninResponse {
          console.log(localStorage.getItem('token'));
          state.isFetching = false;
          state.isSuccess = true;
+         localStorage.setItem('username', action.payload.username);
+         localStorage.setItem('role', action.payload.role);
          state.errorMessage = "Login successful!";
        })
        .addCase(signinUser.rejected, (state, action) => {
@@ -90,7 +97,7 @@ interface SigninResponse {
    }
  });
  
- export const { clearState } = SigninSlice.actions;
+ export const { clearState, clearUserData } = SigninSlice.actions;
  
  export const signinSelector = (state: RootState) => state.signin;
  

@@ -75,6 +75,8 @@ interface SignupResponse {
        .addCase(signupUser.fulfilled, (state, action: PayloadAction<SignupResponse>) => {
          console.log(action.payload);
          localStorage.setItem('token', action.payload.token);
+         localStorage.setItem('username', action.payload.username);
+         localStorage.setItem('role', action.payload.role);
          state.isFetching = false;
          state.isSuccess = true;
          state.errorMessage = "Registration successful!";
