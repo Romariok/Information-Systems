@@ -71,7 +71,7 @@ function Register() {
    if (isSuccess) {
      console.log("Registration successful");
      dispatch(clearState());
-     navigate('/app'); // Adjust this route as needed
+     navigate('/app');
    }
  }, [isError, isSuccess, dispatch, navigate]);
 

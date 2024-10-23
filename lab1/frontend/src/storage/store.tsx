@@ -7,7 +7,7 @@ const store = configureStore({
   reducer:{
     signup: RegisterSlice,
     signin: LoginSlice,
-    app: AppSlice
+    app: AppSlice,
   },
 });
 

@@ -59,7 +59,7 @@ function SignIn() {
     const timer = setTimeout(() => {
       setOpenError(false);
       dispatch(clearState());
-    }, 3000);
+    }, 15000);
     return () => clearTimeout(timer);
   }
 
@@ -135,7 +135,7 @@ function SignIn() {
           <Link href="/user/register" variant="body1" sx={{ fontFamily: "Undertale", color: 'orange' }}>
             {"Don't have an account? Sign Up"}
           </Link>
-          <Snackbar open={openError} autoHideDuration={3000} onClose={() => setOpenError(false)}>
+          <Snackbar open={openError} autoHideDuration={15000} onClose={() => setOpenError(false)}>
             <Alert severity="error" sx={{fontFamily:"Undertale"}}>
               {errorMessage}
             </Alert>

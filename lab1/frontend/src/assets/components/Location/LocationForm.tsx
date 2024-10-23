@@ -7,11 +7,11 @@ import {
    Alert,
    Checkbox
 } from '@mui/material';
-import { appSelector, clearState, sendCoordinates } from "../../storage/Slices/AppSlice";
+import { appSelector, clearState, sendLocation } from "../../../storage/Slices/AppSlice";
 import { useDispatch, useSelector } from 'react-redux';
-import { ISendCoordinate } from "../../storage/Slices/AppSlice";
-import StyleButton from './StyleButton';
-import { AppDispatch } from '../../storage/store';
+import { ISendLocation } from "../../../storage/Slices/AppSlice";
+import StyleButton from '../StyleButton';
+import { AppDispatch } from '../../../storage/store';
 
 
 interface CoordinateFormProps {
@@ -20,30 +20,36 @@ interface CoordinateFormProps {
 }
 
 interface FormData {
+   name: string;
    x: string;
    y: string | null;
+   z: string;
    adminCanModify: boolean;
 }
 
 
-const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
+const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
    const dispatch = useDispatch<AppDispatch>();
    const { isFetching, isSuccess, isError, errorMessage } = useSelector(appSelector);
    const [openError, setOpenError] = useState<boolean>(false);
    const [formData, setFormData] = useState<FormData>({
+      name: '',
       x: '',
       y: '',
+      z: '',
       adminCanModify: false
    });
 
    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const newData = {
-         x: Number(formData.x),
+         name: formData.name === '' ? null : formData.name,
+         x: formData.x === '' ? null : Number(formData.x),
          y: formData.y === '' ? null : Number(formData.y),
+         z: formData.z === '' ? null : Number(formData.z),
          adminCanModify: formData.adminCanModify
       };
-      dispatch(sendCoordinates(newData as ISendCoordinate));
+      dispatch(sendLocation(newData as ISendLocation));
    };
 
    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +72,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
       }
 
       if (isSuccess) {
-         console.log("Coordinate Succesfully Created");
+         console.log("Location Succesfully Location");
          onClose();
          dispatch(clearState());
       }
@@ -107,6 +113,20 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
             >
                <Input
                   margin="dense"
+                  type='text'
+                  required
+                  fullWidth
+                  id="name"
+                  name="name"
+                  autoComplete="name"
+                  autoFocus
+                  value={formData.name}
+                  onChange={handleChange}
+                  sx={{ color: 'white', mb: 1 }}
+                  placeholder='Name'
+               />
+               <Input
+                  margin="dense"
                   type='number'
                   required
                   fullWidth
@@ -118,7 +138,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   onChange={handleChange}
                   inputProps={{ min: -500, max: 500 }}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='X in (-500;500)'
+                  placeholder='X in (-100;100) Float'
                />
                <Input
                   margin="dense"
@@ -132,8 +152,23 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   value={formData.y}
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
-                  inputProps={{ min: -500, max: 500 }}
-                  placeholder='Y in (-500;500)'
+                  inputProps={{ min: -100, max: 100 }}
+                  placeholder='Y in (-100;100)'
+               />
+               <Input
+                  margin="dense"
+                  type='number'
+                  required
+                  fullWidth
+                  id="z"
+                  name="z"
+                  autoComplete="z"
+                  autoFocus
+                  value={formData.z}
+                  onChange={handleChange}
+                  sx={{ color: 'white', mb: 1 }}
+                  inputProps={{ min: -100, max: 100 }}
+                  placeholder='Y in (-100;100)'
                />
                <Box sx={{
                   display: 'flex',
@@ -146,7 +181,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                      name="adminCanModify"
                      autoFocus
                      value={formData.adminCanModify}
-                     onChange={(e) => formData.adminCanModify = e.target.checked} 
+                     onChange={(e) => formData.adminCanModify = e.target.checked}
                      sx={{ color: 'white', mb: 1 }}
                   />
                   <label style={{
@@ -159,7 +194,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                </Box>
 
 
-               <StyleButton text="Create coordinate"
+               <StyleButton text="Create Location"
                   disabled={isFetching}
                   type="submit" />
             </Box>
@@ -173,4 +208,4 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
    );
 };
 
-export default CoordinateForm;
+export default LocationForm;

@@ -25,10 +25,15 @@ import MainPage from './pages/MainPage.tsx';
 
 import '/src/assets/css/main_page.css'
 import MovieTable from './assets/components/MovieTable.tsx';
-import CoordinatesTable from './assets/components/CoordinatesTable.tsx';
-import LocationsTable from './assets/components/LocationTable.tsx';
-import PersonTable from './assets/components/PersonTable.tsx';
+import CoordinatesTable from './assets/components/Coordinates/CoordinatesTable.tsx';
+import LocationsTable from './assets/components/Location/LocationTable.tsx';
+import PersonTable from './assets/components/Person/PersonTable.tsx';
 import AdminRequestTable from './assets/components/AdminRequestTable.tsx';
+import { appSelector, clearAllStates } from './storage/Slices/AppSlice.tsx';
+import { clearUserData } from './storage/Slices/LoginSlice.tsx';
+import StyleButton from './assets/components/StyleButton.tsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from './storage/store.tsx';
 
 interface ListItemLinkProps {
   icon?: React.ReactElement<unknown>;
@@ -54,8 +59,43 @@ const switchPlay = () => {
 }
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuth } = useSelector(appSelector);
   return (
     <Router>
+      <div style={{
+        position: 'fixed',
+        top: 10,
+        right: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+      }}>
+        <label style={{
+          fontFamily: "Undertale",
+          backgroundColor: 'black',
+          color: 'white',
+          padding: 5,
+          borderRadius: 5,
+          alignItems: 'flex-end',
+          flexDirection: 'column',
+          display: 'flex',
+        }}>
+          LOGIN STATUS: <label style={{ color: "orange" }}>{isAuth ? "LOGGED IN AS" + " " + localStorage.getItem('username')
+            : "NOT LOGGED IN"}</label>
+          <br />
+          <label style={{ color: "white" }}>{isAuth ? " ROLE: " : ""}</label>
+          <label style={{ color: "orange" }}>{isAuth ? localStorage.getItem('role') : ""}</label>
+        </label>
+        <StyleButton text="LOGOUT"
+          disabled={!isAuth}
+          onclick={() => {
+            dispatch(clearAllStates());
+            dispatch(clearUserData());
+          }}
+          type="button"
+        />
+      </div>
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Paper elevation={1} >
           <List aria-label="main sections" sx={{
@@ -67,8 +107,9 @@ function App() {
             alignItems: 'center',
             scale: "130%"
           }}>
-            <ListItemLink to="/user/signIn" primary="SignIn" icon={<AccountCircleIcon color='primary' />} />
-            <ListItemLink to="/user/register" primary="Register" icon={<PersonAddAltRoundedIcon color='primary' />} />
+            {!isAuth && <><ListItemLink to="/user/signIn" primary="SignIn" icon={<AccountCircleIcon color='primary' />} />
+              <ListItemLink to="/user/register" primary="Register" icon={<PersonAddAltRoundedIcon color='primary' />} /></>}
+
             <ListItemLink to="/app" primary="App" icon={<AodIcon color='primary' />} />
           </List>
         </Paper>
