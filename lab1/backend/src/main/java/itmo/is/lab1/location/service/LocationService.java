@@ -61,8 +61,8 @@ public class LocationService {
             createLocationDTO.getY(),
             createLocationDTO.getZ(),
             createLocationDTO.getName()))
-         throw new LocationAlreadyExistException(String.format("Location %f %d already exist",
-               createLocationDTO.getX(), createLocationDTO.getY()));
+         throw new LocationAlreadyExistException(String.format("Location %s %.3f %d %d already exist",
+         createLocationDTO.getName(),createLocationDTO.getX(), createLocationDTO.getY(), createLocationDTO.getZ()));
 
       User user = findUserByRequest(request);
 
@@ -102,6 +102,9 @@ public class LocationService {
          location.setZ(alterLocationDTO.getZ());
       if (alterLocationDTO.getName() != null)
          location.setName(alterLocationDTO.getName());
+      if (alterLocationDTO.getAdminCanModify() != null)
+         location.setAdminCanModify(alterLocationDTO.getAdminCanModify());
+      location.setY(alterLocationDTO.getY());
 
       location = locationRepository.save(location);
       simpMessagingTemplate.convertAndSend("/topic", "Location updated");

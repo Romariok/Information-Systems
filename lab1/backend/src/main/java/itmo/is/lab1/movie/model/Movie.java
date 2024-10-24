@@ -5,6 +5,8 @@ import itmo.is.lab1.person.model.Person;
 import itmo.is.lab1.user.model.User;
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import lombok.*;
 
 /**
@@ -31,7 +33,7 @@ public class Movie implements Serializable{
    private Coordinates coordinates;
 
    @Column(name = "creation_date", nullable = false)
-   private java.time.LocalDate creationDate;
+   private LocalDateTime creationDate;
 
    @Column(name = "oscars_count", nullable = false)
    private int oscarsCount;

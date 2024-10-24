@@ -1,5 +1,6 @@
 package itmo.is.lab1.movie.service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -38,9 +39,23 @@ public class MovieService {
    private final JwtUtils jwtUtils;
    private final SimpMessagingTemplate simpMessagingTemplate;
 
-   public List<MovieDTO> getMovie(int from, int size) {
+   public List<MovieDTO> getMoviePage(int from, int size) {
       Pageable page = Pagification.createPageTemplate(from, size);
       List<Movie> movie = movieRepository.findAll(page).getContent();
+      return movie
+            .stream()
+            .map(this::toMovieDTO)
+            .sorted(new Comparator<MovieDTO>() {
+               @Override
+               public int compare(MovieDTO o1, MovieDTO o2) {
+                  return o1.getId().compareTo(o2.getId());
+               }
+            })
+            .toList();
+   }
+
+   public List<MovieDTO> getMovie() {
+      List<Movie> movie = movieRepository.findAll();
       return movie
             .stream()
             .map(this::toMovieDTO)
@@ -82,7 +97,7 @@ public class MovieService {
             .builder()
             .name(createMovieDTO.getName())
             .coordinates(coordinate)
-            .creationDate(createMovieDTO.getCreationDate())
+            .creationDate(LocalDateTime.now())
             .oscarsCount(createMovieDTO.getOscarsCount())
             .budget(createMovieDTO.getBudget())
             .totalBoxOffice(createMovieDTO.getTotalBoxOffice())
@@ -122,11 +137,14 @@ public class MovieService {
                      String.format("Coordinates with id %s not found", alterMovieDTO.getCoordinatesId())));
          movie.setCoordinates(coordinates);
       }
-      if (alterMovieDTO.getCreationDate() != null)
-         movie.setCreationDate(alterMovieDTO.getCreationDate());
+
+      movie.setOscarsCount(alterMovieDTO.getOscarsCount());
 
       if (alterMovieDTO.getBudget() != null)
          movie.setBudget(alterMovieDTO.getBudget());
+
+      movie.setUsaBoxOffice(alterMovieDTO.getUsaBoxOffice());
+      movie.setTotalBoxOffice(alterMovieDTO.getTotalBoxOffice());
 
       if (alterMovieDTO.getMpaaRating() != null)
          movie.setMpaaRating(alterMovieDTO.getMpaaRating());
@@ -143,23 +161,29 @@ public class MovieService {
                      String.format("Person with id %s not found", alterMovieDTO.getScreenwriterId())));
          movie.setScreenwriter(screenwriter);
       }
+      else{
+         movie.setScreenwriter(null);
+      }
       if (alterMovieDTO.getOperatorId() != null) {
          Person operator = personRepository.findById(alterMovieDTO.getOperatorId())
                .orElseThrow(() -> new PersonNotFoundException(
                      String.format("Person with id %s not found", alterMovieDTO.getOperatorId())));
          movie.setOperator(operator);
       }
+      else{
+         movie.setOperator(null);
+      }
       if (alterMovieDTO.getLength() != null)
          movie.setLength(alterMovieDTO.getLength());
 
-      if (alterMovieDTO.getGoldenPalmCount() != null)
-         movie.setGoldenPalmCount(alterMovieDTO.getGoldenPalmCount());
+      movie.setGoldenPalmCount(alterMovieDTO.getGoldenPalmCount());
 
-      if (alterMovieDTO.getTagline() != null)
-         movie.setTagline(alterMovieDTO.getTagline());
+      movie.setTagline(alterMovieDTO.getTagline());
 
-      if (alterMovieDTO.getGenre() != null)
-         movie.setGenre(alterMovieDTO.getGenre());
+      movie.setGenre(alterMovieDTO.getGenre());
+
+      if (alterMovieDTO.getAdminCanModify() != null)
+         movie.setAdminCanModify(alterMovieDTO.getAdminCanModify());
 
       movie = movieRepository.save(movie);
       simpMessagingTemplate.convertAndSend("/topic", "Movie updated");
@@ -228,6 +252,8 @@ public class MovieService {
    @Transactional
    public void removeOscarsFromDirectorsWithMoviesInGenre(MovieGenre genre, HttpServletRequest request) {
       List<Movie> movies = movieRepository.findMoviesByDirectorsWithMoviesInGenre(genre);
+      if (jwtUtils.parseJwt(request) == null || jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request)) == null)
+         throw new ForbiddenException("You have no rights to remove oscars");
 
       for (Movie movie : movies) {
          if (!checkPermission(movie, request))
@@ -235,6 +261,7 @@ public class MovieService {
          movie.setOscarsCount(0);
          movieRepository.save(movie);
       }
+      simpMessagingTemplate.convertAndSend("/topic", "Successfully removed oscars from directors with movies in genre");
    }
 
    private MovieDTO toMovieDTO(Movie movie) {
@@ -287,6 +314,7 @@ public class MovieService {
                         movie.getScreenwriter().getLocation().getUser().getId()))
                   .weight(movie.getScreenwriter().getWeight())
                   .nationality(movie.getScreenwriter().getNationality())
+                  .adminCanModify(movie.getScreenwriter().getAdminCanModify())
                   .userId(movie.getScreenwriter().getUser().getId())
                   .build() : null)
             .operator(movie.getOperator() != null ? PersonDTO
@@ -305,6 +333,7 @@ public class MovieService {
                         movie.getOperator().getLocation().getUser().getId()))
                   .weight(movie.getOperator().getWeight())
                   .nationality(movie.getOperator().getNationality())
+                  .adminCanModify(movie.getOperator().getAdminCanModify())
                   .userId(movie.getOperator().getUser().getId())
                   .build() : null)
             .length(movie.getLength())

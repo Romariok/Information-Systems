@@ -54,7 +54,7 @@ public class CoordinatesService {
       if (coordinatesRepository.existsByXAndY(
             createCoordinatesDTO.getX(),
             createCoordinatesDTO.getY()))
-         throw new CoordinatesAlreadyExistException(String.format("Coordinates %f %d already exist",
+         throw new CoordinatesAlreadyExistException(String.format("Coordinates %.3f %d already exist",
                createCoordinatesDTO.getX(), createCoordinatesDTO.getY()));
 
       User user = findUserByRequest(request);
@@ -87,6 +87,9 @@ public class CoordinatesService {
 
       if (alterCoordinatesDTO.getX() != null)
          coordinates.setX(alterCoordinatesDTO.getX());
+      coordinates.setY(alterCoordinatesDTO.getY());
+      if (alterCoordinatesDTO.getAdminCanModify() != null)
+         coordinates.setAdminCanModify(alterCoordinatesDTO.getAdminCanModify());
 
       coordinates = coordinatesRepository.save(coordinates);
       simpMessagingTemplate.convertAndSend("/topic", "Coordinates updated");

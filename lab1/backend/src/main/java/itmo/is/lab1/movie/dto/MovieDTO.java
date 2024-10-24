@@ -1,5 +1,9 @@
 package itmo.is.lab1.movie.dto;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import itmo.is.lab1.coordinates.dto.CoordinatesDTO;
 import itmo.is.lab1.movie.model.MovieGenre;
 import itmo.is.lab1.movie.model.MpaaRating;
@@ -15,7 +19,8 @@ public class MovieDTO {
    private Long id;
    private String name;
    private CoordinatesDTO coordinates;
-   private java.time.LocalDate creationDate;
+   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+   private LocalDateTime creationDate;
    private int oscarsCount;
    private Double budget;
    private long totalBoxOffice;

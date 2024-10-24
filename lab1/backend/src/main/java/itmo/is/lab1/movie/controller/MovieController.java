@@ -18,8 +18,13 @@ public class MovieController {
    private final MovieService movieService;
 
    @GetMapping
-   public List<MovieDTO> getMovie(@RequestParam int from, @RequestParam int size) {
-      return movieService.getMovie(from, size);
+   public List<MovieDTO> getMoviePage(@RequestParam int from, @RequestParam int size) {
+      return movieService.getMoviePage(from, size);
+   }
+
+   @GetMapping("/all")
+   public List<MovieDTO> getMovie() {
+      return movieService.getMovie();
    }
 
    @GetMapping("/count/director")
@@ -43,7 +48,7 @@ public class MovieController {
    }
 
    @PostMapping
-   public MovieDTO createMovie(@Valid @RequestBody CreateMovieDTO createMovieDTO, HttpServletRequest request) {
+   public MovieDTO createMovie(@RequestBody @Valid CreateMovieDTO createMovieDTO, HttpServletRequest request) {
       return movieService.createMovie(createMovieDTO, request);
    }
 

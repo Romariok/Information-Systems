@@ -2,6 +2,8 @@ package itmo.is.lab1.movie.dto;
 
 import itmo.is.lab1.movie.model.MovieGenre;
 import itmo.is.lab1.movie.model.MpaaRating;
+import itmo.is.lab1.utils.NullOrPositive;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,16 +21,13 @@ public class CreateMovieDTO {
    @Positive  
    private Long coordinatesId;
 
-   @NotNull
-   private java.time.LocalDate creationDate;
-
-   @Positive
+   @Min(value=0)
    private int oscarsCount;
 
-   @Positive
+   @NullOrPositive
    private Double budget;
 
-   @Positive 
+   @Positive
    private long totalBoxOffice;
 
    @NotNull
@@ -38,17 +37,17 @@ public class CreateMovieDTO {
    @Positive  
    private Long directorId;
 
-   @Positive 
+   @NullOrPositive
    private Long screenwriterId;
 
-   @Positive  
+   @NullOrPositive
    private Long operatorId;
 
    @NotNull
    @Positive
    private Long length;
 
-   @Positive
+   @NullOrPositive
    private Long goldenPalmCount;
 
    @Positive

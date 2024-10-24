@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import itmo.is.lab1.location.dto.*;
 import itmo.is.lab1.location.service.LocationService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -21,12 +22,12 @@ public class LocationController {
    }
 
    @PostMapping
-   public LocationDTO createLocation(@RequestBody CreateLocationDTO createLocationDTO, HttpServletRequest request) {
+   public LocationDTO createLocation(@RequestBody @Valid CreateLocationDTO createLocationDTO, HttpServletRequest request) {
       return locationService.createLocation(createLocationDTO, request);
    }
 
    @PatchMapping("/{locationId}")
-   public LocationDTO alterLocation(@PathVariable Long locationId, @RequestBody AlterLocationDTO alterLocationDTO,
+   public LocationDTO alterLocation(@PathVariable Long locationId, @RequestBody @Valid AlterLocationDTO alterLocationDTO,
          HttpServletRequest request) {
       return locationService.alterLocation(locationId, alterLocationDTO, request);
    }
