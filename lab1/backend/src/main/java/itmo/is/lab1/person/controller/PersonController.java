@@ -28,7 +28,7 @@ public class PersonController {
    }
 
    @PatchMapping("/{personId}")
-   public PersonDTO alterPerson(@PathVariable Long personId, @RequestBody AlterPersonDTO alterPersonDTO,
+   public PersonDTO alterPerson(@PathVariable Long personId, @RequestBody @Valid AlterPersonDTO alterPersonDTO,
          HttpServletRequest request) {
       return personService.alterPerson(personId, alterPersonDTO, request);
    }

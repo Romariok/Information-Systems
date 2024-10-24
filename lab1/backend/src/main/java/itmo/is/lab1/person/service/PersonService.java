@@ -88,6 +88,7 @@ public class PersonService {
       if (alterPersonDTO.getEyeColor() != null) {
          person.setEyeColor(alterPersonDTO.getEyeColor());
       }
+      person.setHairColor(alterPersonDTO.getHairColor());
       if (alterPersonDTO.getLocationId() != null) {
          Location location = locationRepository.findById(alterPersonDTO.getLocationId())
                .orElseThrow(() -> new LocationNotFoundException(
@@ -99,6 +100,10 @@ public class PersonService {
       }
       if (alterPersonDTO.getNationality() != null) {
          person.setNationality(alterPersonDTO.getNationality());
+      }
+
+      if (alterPersonDTO.getAdminCanModify() != null) {
+         person.setAdminCanModify(alterPersonDTO.getAdminCanModify());
       }
 
       person = personRepository.save(person);
