@@ -8,13 +8,14 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
-import AodIcon from '@mui/icons-material/Aod';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import {
   Link,
   Route,
   Routes,
   BrowserRouter as Router,
+  Navigate,
 } from 'react-router-dom';
 import { Grid, Typography } from '@mui/material';
 
@@ -24,16 +25,18 @@ import Register from './pages/Register.tsx';
 import MainPage from './pages/MainPage.tsx';
 
 import '/src/assets/css/main_page.css'
-import MovieTable from './assets/components/MovieTable.tsx';
+import MovieTable from './assets/components/Movie/MovieTable.tsx';
 import CoordinatesTable from './assets/components/Coordinates/CoordinatesTable.tsx';
 import LocationsTable from './assets/components/Location/LocationTable.tsx';
 import PersonTable from './assets/components/Person/PersonTable.tsx';
-import AdminRequestTable from './assets/components/AdminRequestTable.tsx';
+import AdminRequestTable from './assets/components/Admin/AdminRequestTable.tsx';
 import { appSelector, clearAllStates } from './storage/Slices/AppSlice.tsx';
 import { clearUserData } from './storage/Slices/LoginSlice.tsx';
 import StyleButton from './assets/components/StyleButton.tsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from './storage/store.tsx';
+import SpecialFunctions from './assets/components/SpecialFunctions.tsx';
+import MapPage from './assets/components/Map/MapPage.tsx';
 
 interface ListItemLinkProps {
   icon?: React.ReactElement<unknown>;
@@ -77,7 +80,7 @@ function App() {
           color: 'white',
           padding: 5,
           borderRadius: 5,
-          alignItems: 'flex-end',
+          // alignItems: 'flex-end',
           flexDirection: 'column',
           display: 'flex',
         }}>
@@ -87,14 +90,7 @@ function App() {
           <label style={{ color: "white" }}>{isAuth ? " ROLE: " : ""}</label>
           <label style={{ color: "orange" }}>{isAuth ? localStorage.getItem('role') : ""}</label>
         </label>
-        <StyleButton text="LOGOUT"
-          disabled={!isAuth}
-          onclick={() => {
-            dispatch(clearAllStates());
-            dispatch(clearUserData());
-          }}
-          type="button"
-        />
+
       </div>
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Paper elevation={1} >
@@ -107,10 +103,17 @@ function App() {
             alignItems: 'center',
             scale: "130%"
           }}>
+            <ListItemLink to="/app" primary="App" icon={<MenuIcon color='primary' />} />
             {!isAuth && <><ListItemLink to="/user/signIn" primary="SignIn" icon={<AccountCircleIcon color='primary' />} />
               <ListItemLink to="/user/register" primary="Register" icon={<PersonAddAltRoundedIcon color='primary' />} /></>}
-
-            <ListItemLink to="/app" primary="App" icon={<AodIcon color='primary' />} />
+            {isAuth && <>        <StyleButton text="LOGOUT"
+              disabled={!isAuth}
+              onclick={() => {
+                dispatch(clearAllStates());
+                dispatch(clearUserData());
+              }}
+              type="button"
+            /></>}
           </List>
         </Paper>
       </Box>
@@ -126,6 +129,8 @@ function App() {
             <Route path="/app/location" element={<LocationsTable />} />
             <Route path="/app/person" element={<PersonTable />} />
             <Route path="/app/admin" element={<AdminRequestTable />} />
+            <Route path="/app/special" element={<SpecialFunctions />} />
+            <Route path="/app/map" element={<MapPage />} />
           </Routes>
         </Grid>
       </Grid>

@@ -83,7 +83,7 @@ interface SigninResponse {
          state.isSuccess = true;
          localStorage.setItem('username', action.payload.username);
          localStorage.setItem('role', action.payload.role);
-         state.errorMessage = "Login successful!";
+         return state;
        })
        .addCase(signinUser.rejected, (state, action) => {
          console.log(action.payload);

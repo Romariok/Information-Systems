@@ -36,7 +36,7 @@ const colors = [{ value: "GREEN", label: "Green" }, { value: "BLUE", label: "Blu
 const colorsNULL = [{ value: "GREEN", label: "Green" }, { value: "BLUE", label: "Blue" }, { value: "WHITE", label: "White" }, { value: "BROWN", label: "Brown" }, { value: "", label: "NULL" }];
 const nationalities = [{ value: "RUSSIA", label: "RU" }, { value: "UNITED_KINGDOM", label: "UK" }, { value: "VATICAN", label: "VA" }, { value: "ITALY", label: "IT" }, { value: "THAILAND", label: "TH" }];
 
-const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
+const PersonForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
    const dispatch = useDispatch<AppDispatch>();
    const { isFetching, isSuccess, isError, errorMessage, locations } = useSelector(appSelector);
    const [openError, setOpenError] = useState<boolean>(false);
@@ -97,6 +97,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
             onClose={onClose}
             aria-labelledby="person-form-modal"
             aria-describedby="person-form-description"
+            sx={{backgroundColor: 'rgba(0, 0, 0, 0.8)'}}
          >
             <Box
                component="form"
@@ -181,7 +182,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   value={formData.name}
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='Name'
+                  placeholder='Name (Not NULL)'
                />
 
                <TextField
@@ -286,4 +287,4 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
    );
 };
 
-export default LocationForm;
+export default PersonForm;

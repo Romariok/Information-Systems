@@ -50,15 +50,19 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
 
    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      if (name === 'adminCanModify') {setFormData((prevState) => ({
-         ...prevState,
-         [name]: e.target.checked,
-      })); }
-      else{setFormData((prevState) => ({
-         ...prevState,
-         [name]: value
-      }));}
-      
+      if (name === 'adminCanModify') {
+         setFormData((prevState) => ({
+            ...prevState,
+            [name]: e.target.checked,
+         }));
+      }
+      else {
+         setFormData((prevState) => ({
+            ...prevState,
+            [name]: value
+         }));
+      }
+
    };
 
    useEffect(() => {
@@ -130,7 +134,7 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
                   onChange={handleChange}
                   inputProps={{ min: -500, max: 500 }}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='X in (-500;500) Float'
+                  placeholder='X in (-500;500) Float Not NULL'
                />
                <Input
                   margin="dense"

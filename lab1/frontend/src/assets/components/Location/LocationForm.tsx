@@ -85,6 +85,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
             onClose={onClose}
             aria-labelledby="coordinate-form-modal"
             aria-describedby="coordinate-form-description"
+            sx={{backgroundColor: 'rgba(0, 0, 0, 0.8)'}}
          >
             <Box
                component="form"
@@ -123,7 +124,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   value={formData.name}
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='Name'
+                  placeholder='Name (Not NULL)'
                />
                <Input
                   margin="dense"
@@ -138,7 +139,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   onChange={handleChange}
                   inputProps={{ min: -500, max: 500 }}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='X in (-100;100) Float'
+                  placeholder='X in (-100;100) Float Not NULL'
                />
                <Input
                   margin="dense"
@@ -168,7 +169,7 @@ const LocationForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
                   inputProps={{ min: -100, max: 100 }}
-                  placeholder='Y in (-100;100)'
+                  placeholder='Z in (-100;100) Not NULL'
                />
                <Box sx={{
                   display: 'flex',
