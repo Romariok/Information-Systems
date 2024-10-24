@@ -79,6 +79,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
             onClose={onClose}
             aria-labelledby="coordinate-form-modal"
             aria-describedby="coordinate-form-description"
+            sx={{backgroundColor: 'rgba(0, 0, 0, 0.8)'}}
          >
             <Box
                component="form"
@@ -118,7 +119,7 @@ const CoordinateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) => {
                   onChange={handleChange}
                   inputProps={{ min: -500, max: 500 }}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='X in (-500;500) Float'
+                  placeholder='X in (-500;500) Float Not NULL'
                />
                <Input
                   margin="dense"

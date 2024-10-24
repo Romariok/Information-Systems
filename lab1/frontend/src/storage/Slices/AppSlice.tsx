@@ -1,19 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import { RootState } from "../store";
-import { MovieGenre, MpaaRating } from "../../assets/components/MovieTable";
+import { MovieGenre, MpaaRating } from "../../assets/components/Movie/MovieTable";
 import { Color, Nationality } from "../../assets/components/Person/PersonTable";
 
 import { LocationsArray } from "../../assets/components/Location/LocationTable";
 import { CoordinatesArray } from "../../assets/components/Coordinates/CoordinatesTable";
-import { AdminRequestArray } from "../../assets/components/AdminRequestTable";
-import { MovieArray } from "../../assets/components/MovieTable";
+import { AdminRequestArray } from "../../assets/components/Admin/AdminRequestTable";
+import { MovieArray } from "../../assets/components/Movie/MovieTable";
 import { PersonArray } from "../../assets/components/Person/PersonTable";
 
 export interface ICoordinate {
    id: number,
    x: number,
-   y: number,
+   y: number | null,
    adminCanModify: boolean,
    userId: number;
 }
@@ -35,7 +35,7 @@ export interface ILocation {
    id: number,
    name: string,
    x: number,
-   y: number,
+   y: number | null,
    z: number,
    adminCanModify: boolean,
    userId: number;
@@ -44,7 +44,7 @@ export interface ILocation {
 export interface ISendLocation {
    name: string,
    x: number,
-   y: number,
+   y: number | null,
    z: number,
    adminCanModify: boolean;
 }
@@ -53,111 +53,110 @@ export interface IUpdateLocation {
    id: number,
    name: string,
    x: number,
-   y: number,
+   y: number | null,
    z: number,
    adminCanModify: boolean;
 }
 
 export interface IMovie {
    id: number;
-   budget: number;
+   budget: number | null;
    creationDate: string;
-   genre: MovieGenre;
-   goldenPalmCount: number;
+   genre: MovieGenre | null;
+   goldenPalmCount: number | null;
    length: number;
    mpaaRating: MpaaRating;
    name: string;
-   oscarsCount: number;
-   tagline: string;
-   totalBoxOffice: number;
-   usaBoxOffice: number;
-   coordinatesId: number;
+   oscarsCount: number | null;
+   tagline: string | null;
+   totalBoxOffice: number | null;
+   usaBoxOffice: number | null;
+   coordinatesId: number | null;
    directorId: number;
-   operatorId: number;
-   screenwriterId: number;
+   operatorId: number | null;
+   screenwriterId: number | null;
    adminCanModify: boolean;
    userId: number;
 }
 
 export interface ISendMovie {
-   budget: number;
-   creationDate: string;
-   genre: MovieGenre;
-   goldenPalmCount: number;
+   budget: number | null;
+   genre: MovieGenre | null;
+   goldenPalmCount: number | null;
    length: number;
    mpaaRating: MpaaRating;
    name: string;
-   oscarsCount: number;
-   tagline: string;
-   totalBoxOffice: number;
-   usaBoxOffice: number;
-   coordinatesId: number;
+   oscarsCount: number | null;
+   tagline: string | null;
+   totalBoxOffice: number | null;
+   usaBoxOffice: number | null;
+   coordinatesId: number | null;
    directorId: number;
-   operatorId: number;
-   screenwriterId: number;
+   operatorId: number | null;
+   screenwriterId: number | null;
    adminCanModify: boolean;
 }
 
 export interface IUpdateMovie {
    id: number;
-   budget: number;
-   creationDate: string;
-   genre: MovieGenre;
-   goldenPalmCount: number;
+   budget: number | null;
+   genre: MovieGenre | null;
+   goldenPalmCount: number | null;
    length: number;
    mpaaRating: MpaaRating;
    name: string;
-   oscarsCount: number;
-   tagline: string;
-   totalBoxOffice: number;
-   usaBoxOffice: number;
-   coordinatesId: number;
+   oscarsCount: number | null;
+   tagline: string | null;
+   totalBoxOffice: number | null;
+   usaBoxOffice: number | null;
+   coordinatesId: number | null;
    directorId: number;
-   operatorId: number;
-   screenwriterId: number;
+   operatorId: number | null;
+   screenwriterId: number | null;
    adminCanModify: boolean;
 }
 
 export interface IPerson {
    id: number;
    eyeColor: Color;
-   hairColor: Color;
+   hairColor: Color | null;
    name: string;
-   nationality: Nationality;
+   nationality: Nationality | null;
    weight: number;
-   locationId: number;
+   locationId: number | null;
    adminCanModify: boolean;
    userId: number;
 }
 
 export interface ISendPerson {
    eyeColor: Color;
-   hairColor: Color;
+   hairColor: Color | null;
    name: string;
-   nationality: Nationality;
+   nationality: Nationality | null;
    weight: number;
-   locationId: number;
+   locationId: number | null;
    adminCanModify: boolean;
 }
 
 export interface IUpdatePerson {
    id: number;
    eyeColor: Color;
-   hairColor: Color;
+   hairColor: Color | null;
    name: string;
-   nationality: Nationality;
+   nationality: Nationality | null;
    weight: number;
-   locationId: number;
+   locationId: number | null;
    adminCanModify: boolean;
 }
 
 interface IAdminRequest {
    id: number,
-   userId: number;
+   username: string;
 }
 
-
-
+interface IRole {
+   role: string;
+}
 
 
 interface AppState {
@@ -178,7 +177,9 @@ interface AppState {
    personPage: number,
    person: IPerson | null,
    moviePage: number,
-   movie: IMovie | null
+   movie: IMovie | null,
+   adminRequestPage: number,
+   moviesAll: MovieArray
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const getCoordinates = createAsyncThunk<
@@ -335,7 +336,7 @@ export const sendLocation = createAsyncThunk<
    ISendLocation,
    { rejectValue: string }
 >(
-   "app/coordinates/sendLocation",
+   "app/location/sendLocation",
    async ({ name, x, y, z, adminCanModify }, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
@@ -554,7 +555,6 @@ export const sendDeletePerson = createAsyncThunk<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 // budget, creationDate, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 export const getMovie = createAsyncThunk<
    any,
@@ -567,7 +567,33 @@ export const getMovie = createAsyncThunk<
       try {
          const link = "http://localhost:8080/movie";
 
-         const response = await axios.get<IMovie[]>(link, { params: { from: page * 10, size: 10 } });
+         const response = await axios.get<IMovie[]>(link, { params: { from: page * 5, size: 5 } });
+         const data = response.data;
+         if (response.status === 200) {
+            return data;
+         } else {
+            return thunkAPI.rejectWithValue(data.toString());
+         }
+      } catch (e) {
+         const error = e as AxiosError<string>;
+         console.log("Error", error.response?.data);
+         return thunkAPI.rejectWithValue(error.response?.data || "An error occurred");
+      }
+   }
+);
+
+export const getMovieAll = createAsyncThunk<
+   any,
+   void,
+   { rejectValue: string }
+>(
+   "app/getMovieAll",
+   async (_, thunkAPI) => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+         const link = "http://localhost:8080/movie/all";
+
+         const response = await axios.get<IMovie[]>(link, {});
          const data = response.data;
          if (response.status === 200) {
             return data;
@@ -588,12 +614,12 @@ export const sendMovie = createAsyncThunk<
    { rejectValue: string }
 >(
    "app/coordinates/sendMovie",
-   async ({budget, creationDate, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify }, thunkAPI) => {
+   async ({ budget, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify }, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
          const link = `http://localhost:8080/movie`;
          const params = {
-            budget, creationDate, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify
+            budget, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify
          };
          const response = await axios.post(link, params, {
             headers: {
@@ -620,12 +646,12 @@ export const sendUpdatedMovie = createAsyncThunk<
    { rejectValue: string }
 >(
    "app/coordinates/sendUpdatedMovie",
-   async ({ id, budget, creationDate, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify }, thunkAPI) => {
+   async ({ id, budget, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify }, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
          const link = `http://localhost:8080/movie/${id}`;
          const params = {
-            budget, creationDate, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify
+            budget, genre, goldenPalmCount, length, mpaaRating, name, oscarsCount, tagline, totalBoxOffice, usaBoxOffice, coordinatesId, directorId, operatorId, screenwriterId, adminCanModify
          };
          const response = await axios.patch(link, params, {
             headers: {
@@ -651,7 +677,7 @@ export const sendDeleteMovie = createAsyncThunk<
    { id: number },
    { rejectValue: string }
 >(
-   "app/coordinates/sendDeleteMovie",
+   "app/movie/sendDeleteMovie",
    async ({ id }, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
@@ -675,23 +701,46 @@ export const sendDeleteMovie = createAsyncThunk<
    }
 );
 
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 export const getAdminRequest = createAsyncThunk<
    any,
-   void,
+   number,
    { rejectValue: string }
 >(
    "app/getAdminRequest",
-   async (_, thunkAPI) => {
+   async (page, thunkAPI) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       try {
          const link = "http://localhost:8080/admin";
 
-         const response = await axios.get<IAdminRequest[]>(link, {
-            headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
-         });
+         const response = await axios.get<IAdminRequest[]>(link, { params: { from: page * 10, size: 10 } });
+         const data = response.data;
+         if (response.status === 200) {
+            return data;
+         } else {
+            return thunkAPI.rejectWithValue(data.toString());
+         }
+      } catch (e) {
+         const error = e as AxiosError<string>;
+         console.log("Error", error.response?.data);
+         return thunkAPI.rejectWithValue(error.response?.data || "An error occurred");
+      }
+   }
+);
+
+export const getUserRole = createAsyncThunk<
+   any,
+   string,
+   { rejectValue: string }
+>(
+   "app/getUserRole",
+   async (username, thunkAPI) => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+         const link = `http://localhost:8080/user/role/${username}`;
+
+         const response = await axios.get(link, {});
          const data = response.data;
          if (response.status === 200) {
             return data;
@@ -707,14 +756,15 @@ export const getAdminRequest = createAsyncThunk<
 );
 
 export const sendAdminRequest = createAsyncThunk<
-   IAdminRequest,
+   any,
+   void,
    { rejectValue: string }
 >(
-   "app/sendCoordinate",
+   "app/sendAdminRequest",
    async (_, thunkAPI) => {
       try {
          const link = "http://localhost:8080/admin";
-         const response = await axios.post<IAdminRequest>(link, {}, {
+         const response = await axios.post(link, {}, {
             headers: {
                "Content-Type": "application/json",
                "Authorization": `Bearer ${localStorage.getItem('token')}`
@@ -734,6 +784,36 @@ export const sendAdminRequest = createAsyncThunk<
    }
 );
 
+export const sendApproveAdminRequest = createAsyncThunk<
+   any,
+   { id: number },
+   { rejectValue: string }
+>(
+   "app/admin/sendApproveAdminRequest",
+   async ({ id }, thunkAPI) => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+         const link = `http://localhost:8080/admin/${id}`;
+         const response = await axios.put(link, {
+            headers: {
+               "Authorization": 'Bearer ' + String(localStorage.getItem('token'))
+            }
+         });
+         const data = response.data;
+         if (response.status === 200) {
+            return data;
+         } else {
+            return thunkAPI.rejectWithValue(data.toString());
+         }
+      } catch (e) {
+         const error = e as AxiosError<string>;
+         console.log("Error", error.response?.data);
+         return thunkAPI.rejectWithValue(error.response?.data || "An error occurred");
+      }
+   }
+);
+
+
 const initialState: AppState = {
    isFetching: false,
    isSuccess: false,
@@ -743,6 +823,7 @@ const initialState: AppState = {
    locations: [] as LocationsArray,
    persons: [] as PersonArray,
    movies: [] as MovieArray,
+   moviesAll: [] as MovieArray,
    adminRequest: [] as AdminRequestArray,
    coordinates: [] as CoordinatesArray,
    coordinatesPage: 0,
@@ -752,7 +833,8 @@ const initialState: AppState = {
    personPage: 0,
    person: null,
    moviePage: 0,
-   movie: null
+   movie: null,
+   adminRequestPage: 0,
 };
 
 export const AppSlice = createSlice({
@@ -806,6 +888,18 @@ export const AppSlice = createSlice({
       setUpdatedMovie: (state, action) => {
          state.movie = action.payload;
       },
+      setAdminRequestPage: (state, action) => {
+         state.adminRequestPage = action.payload;
+      },
+      setFetching: (state, action) => {
+         state.isFetching = action.payload;
+      },
+      setError(state, action) {
+         state.isError = action.payload;
+      },
+      setErrorMessage(state, action) {
+         state.errorMessage = action.payload;
+      }
    },
    extraReducers: (builder) => {
       builder
@@ -1113,14 +1207,92 @@ export const AppSlice = createSlice({
          .addCase(sendDeleteMovie.pending, (state) => {
             state.isFetching = true;
          })
-
+         .addCase(getAdminRequest.fulfilled, (state, action) => {
+            state.isFetching = false;
+            state.adminRequest = action.payload;
+            return state;
+         })
+         .addCase(getAdminRequest.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            state.adminRequest = [];
+         })
+         .addCase(getAdminRequest.pending, (state) => {
+            state.isFetching = true;
+         })
+         .addCase(sendAdminRequest.fulfilled, (state) => {
+            state.isFetching = false;
+            return state;
+         })
+         .addCase(sendAdminRequest.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            if (action?.payload?.status == 500) {
+               state.errorMessage = "You have no rights to commit this!";
+            }
+            else if (action?.payload?.status == 400) {
+               state.errorMessage = "Invalid parameters!";
+            }
+            else {
+               state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            }
+         })
+         .addCase(sendAdminRequest.pending, (state) => {
+            state.isFetching = true;
+         })
+         .addCase(sendApproveAdminRequest.fulfilled, (state) => {
+            state.isFetching = false;
+            return state;
+         })
+         .addCase(sendApproveAdminRequest.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            if (action?.payload?.status == 500) {
+               state.errorMessage = "You have no rights to commit this!";
+            }
+            else if (action?.payload?.status == 400) {
+               state.errorMessage = "Invalid parameters!";
+            }
+            else {
+               state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            }
+         })
+         .addCase(sendApproveAdminRequest.pending, (state) => {
+            state.isFetching = true;
+         })
+         .addCase(getUserRole.fulfilled, (state, action) => {
+            state.isFetching = false;
+            localStorage.setItem('role', action.payload);
+            return state;
+         })
+         .addCase(getUserRole.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+         })
+         .addCase(getUserRole.pending, (state) => {
+            state.isFetching = true;
+         })
+         .addCase(getMovieAll.fulfilled, (state, action) => {
+            state.isFetching = false;
+            state.moviesAll = action.payload;
+            return state;
+         })
+         .addCase(getMovieAll.rejected, (state) => {
+            state.isFetching = false;
+            state.moviesAll = [];
+         })
+         .addCase(getMovieAll.pending, (state) => {
+            state.isFetching = true;
+         })
    }
 })
 
 
 
 export const { clearState, clearAllStates, setCoordinatesPage, setUpdatedCoordinate, setLocationPage, setUpdatedLocation,
-   setPersonPage, setUpdatedPerson
+   setPersonPage, setUpdatedPerson, setMoviePage, setUpdatedMovie, setAdminRequestPage, setFetching, setError, setErrorMessage
 } = AppSlice.actions;
 
 

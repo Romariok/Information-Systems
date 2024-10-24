@@ -4,7 +4,7 @@ import {
 } from 'react-router-dom';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { appSelector, clearState, getCoordinates, getLocation, getPerson, setCoordinatesPage } from "../storage/Slices/AppSlice";
+import { appSelector, clearState, getAdminRequest, getCoordinates, getLocation, getMovie, getMovieAll, getPerson, getUserRole, setCoordinatesPage } from "../storage/Slices/AppSlice";
 
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
@@ -19,6 +19,8 @@ import AddLocationAltIcon from '@mui/icons-material/AddLocationAlt'; //Coordinat
 import AddLocationIcon from '@mui/icons-material/AddLocation'; // Location
 import MovieCreationIcon from '@mui/icons-material/MovieCreation';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import MapIcon from '@mui/icons-material/Map';
 import { AppDispatch } from '../storage/store';
 import React, { useEffect } from 'react';
 
@@ -47,7 +49,7 @@ const switchPlay = () => {
 
 function MainPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { coordinatesPage, locationPage, personPage, moviePage } = useSelector(appSelector);
+  const { coordinatesPage, locationPage, personPage, moviePage, adminRequestPage } = useSelector(appSelector);
 
 
   useEffect(() => {
@@ -56,6 +58,13 @@ function MainPage() {
       dispatch(getCoordinates(coordinatesPage));
       dispatch(getLocation(locationPage));
       dispatch(getPerson(personPage));
+      dispatch(getMovie(moviePage));
+      dispatch(getMovieAll());
+      dispatch(getAdminRequest(adminRequestPage));
+      
+      if (localStorage.getItem('username') !== undefined && localStorage.getItem('username') !== null) {
+        dispatch(getUserRole(localStorage.getItem('username') as string));
+      }
       const sock = new SockJS("http://localhost:8080/ws");
       const stompClient = Stomp.over(sock);
       stompClient.connect({
@@ -67,6 +76,9 @@ function MainPage() {
           dispatch(getCoordinates(coordinatesPage));
           dispatch(getLocation(locationPage));
           dispatch(getPerson(personPage));
+          dispatch(getMovie(moviePage));
+          dispatch(getMovieAll());
+          dispatch(getAdminRequest(adminRequestPage));
         },
           {
             "Authorization": `Bearer ${localStorage.getItem('token')}`,
@@ -89,17 +101,18 @@ function MainPage() {
           alignItems: 'center',
           scale: "200%",
         }}>
-          <Grid container sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-            <Grid item>
+          <Grid container sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+            <Grid item sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
               <ListItemLink to="/app/movie" primary="Movie" icon={<MovieCreationIcon color='primary' />} />
               <ListItemLink to="/app/location" primary="Location" icon={<AddLocationIcon color='primary' />} />
               <ListItemLink to="/app/coordinates" primary="Coordinates" icon={<AddLocationAltIcon color='primary' />} />
             </Grid>
-            <Grid item sx={{ pl: "30px" }}>
+            <Grid item sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
               <ListItemLink to="/app/person" primary="Person" icon={<PersonAddIcon color='primary' />} />
               <ListItemLink to="/app/admin" primary="Admin Requests" icon={<AddModeratorIcon color='primary' />} />
-              <ListItemLink to="/app/person" primary="Special Functions" icon={<PersonAddIcon color='primary' />} />
+              <ListItemLink to="/app/special" primary="Special Functions" icon={<MoreHorizIcon color='primary' />} />
             </Grid>
+            <ListItemLink to="/app/map" primary="Map" icon={<MapIcon color='primary' />} />
           </Grid>
 
         </List>

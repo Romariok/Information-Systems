@@ -56,15 +56,19 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
 
    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      if (name === 'adminCanModify') {setFormData((prevState) => ({
-         ...prevState,
-         [name]: e.target.checked,
-      })); }
-      else{setFormData((prevState) => ({
-         ...prevState,
-         [name]: value
-      }));}
-      
+      if (name === 'adminCanModify') {
+         setFormData((prevState) => ({
+            ...prevState,
+            [name]: e.target.checked,
+         }));
+      }
+      else {
+         setFormData((prevState) => ({
+            ...prevState,
+            [name]: value
+         }));
+      }
+
    };
 
    useEffect(() => {
@@ -137,7 +141,7 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
                   value={formData.name}
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='Name'
+                  placeholder='Name (Not NULL)'
                />
                <Input
                   margin="dense"
@@ -152,7 +156,7 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
                   onChange={handleChange}
                   inputProps={{ min: -500, max: 500 }}
                   sx={{ color: 'white', mb: 1 }}
-                  placeholder='X in (-100;100) Float'
+                  placeholder='X in (-100;100) Float Not NULL'
                />
                <Input
                   margin="dense"
@@ -182,7 +186,7 @@ const CoordinateUpdateForm: React.FC<CoordinateFormProps> = ({ open, onClose }) 
                   onChange={handleChange}
                   sx={{ color: 'white', mb: 1 }}
                   inputProps={{ min: -100, max: 100 }}
-                  placeholder='Y in (-100;100)'
+                  placeholder='Z in (-100;100) Not NULL'
                />
                <Box sx={{
                   display: 'flex',
