@@ -1,4 +1,4 @@
-import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box } from '@mui/material';
+import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { appSelector, getPerson, IPerson, sendDeletePerson, setPersonPage, setUpdatedPerson } from "../../../storage/Slices/AppSlice";
 import { AppDispatch } from '../../../storage/store';
@@ -43,6 +43,8 @@ export default function PersonTable() {
     const { persons, isFetching, personPage } = useSelector(appSelector);
     const [openCreate, setOpenCreate] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
+    const [filters, setFilters] = useState<{[key: string]: string}>({});
+    const [activeColumn, setActiveColumn] = useState<string | null>(null);
 
 
     const handleOpenCreate = () => {
@@ -71,6 +73,60 @@ export default function PersonTable() {
 
     };
 
+    const handleColumnClick = (columnName: string) => {
+        setActiveColumn(activeColumn === columnName ? null : columnName);
+        if (activeColumn === columnName) {
+            const newFilters = { ...filters };
+            delete newFilters[columnName];
+            setFilters(newFilters);
+        }
+    };
+
+    const handleFilterChange = (columnName: string, value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            [columnName]: value
+        }));
+    };
+
+    const getFilteredMovies = () => {
+        if (!persons) return [];
+        return persons.filter(movie => {
+            return Object.entries(filters).every(([column, filterValue]) => {
+                if (!filterValue) return true;
+                const movieValue = String(movie[column as keyof Person] || '').toLowerCase();
+                return movieValue.includes(filterValue.toLowerCase());
+            });
+        });
+    };
+
+    const renderTableHeader = (columnName: string, label: string) => (
+        <TableCell 
+            onClick={() => handleColumnClick(columnName)}
+            style={{ cursor: 'pointer', position: 'relative' }}
+        >
+            {label}
+            {activeColumn === columnName && (
+                <TextField
+                    size="small"
+                    value={filters[columnName] || ''}
+                    onChange={(e) => handleFilterChange(columnName, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ 
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        width: '100%'
+                    }}
+                />
+            )}
+        </TableCell>
+    );
+
+    const filteredMovies = getFilteredMovies();
+
     if (persons !== undefined && persons.length > 0) {
         return (
             <>
@@ -83,31 +139,31 @@ export default function PersonTable() {
                         <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>Eye Color</TableCell>
-                                    <TableCell>Hair Color</TableCell>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Nationality</TableCell>
-                                    <TableCell>Weight</TableCell>
-                                    <TableCell>Location ID</TableCell>
-                                    <TableCell>Admin Can Modify</TableCell>
-                                    <TableCell>User ID</TableCell>
+                                    {renderTableHeader('id', 'ID')}
+                                    {renderTableHeader('eyeColor', 'Eye Color')}
+                                    {renderTableHeader('hairColor', 'Hair Color')}
+                                    {renderTableHeader('name', 'Name')}
+                                    {renderTableHeader('nationality', 'Nationality')}
+                                    {renderTableHeader('weight', 'Nationality')}
+                                    {renderTableHeader('locationId', 'Location ID')}
+                                    {renderTableHeader('adminCanModify', 'Admin Can Modify')}
+                                    {renderTableHeader('userId', 'User ID')}
                                     <TableCell></TableCell>
                                     <TableCell></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {persons.map((row, i) => (
+                                {filteredMovies.map((row, i) => (
                                     <TableRow key={i}>
-                                        <TableCell>{row.id}</TableCell>
-                                        <TableCell>{row.eyeColor}</TableCell>
+                                        <TableCell>{String(row.id)}</TableCell>
+                                        <TableCell>{String(row.eyeColor)}</TableCell>
                                         <TableCell>{String(row.hairColor)}</TableCell>
-                                        <TableCell>{row.name}</TableCell>
-                                        <TableCell>{row.nationality}</TableCell>
-                                        <TableCell>{row.weight}</TableCell>
-                                        <TableCell>{row.location.id}</TableCell>
+                                        <TableCell>{String(row.name)}</TableCell>
+                                        <TableCell>{String(row.nationality)}</TableCell>
+                                        <TableCell>{String(row.weight)}</TableCell>
+                                        <TableCell>{String(row.location.id)}</TableCell>
                                         <TableCell>{String(row.adminCanModify)}</TableCell>
-                                        <TableCell>{row.userId}</TableCell>
+                                        <TableCell>{String(row.userId)}</TableCell>
                                         <TableCell><div>
                                             <StyleButton text="Update" onclick={(e) => handleOpenUpdate(row)} disabled={isFetching} type="button" />
                                             <PersonUpdateForm open={openUpdate} onClose={handleCloseUpdate} />

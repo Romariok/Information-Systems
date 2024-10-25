@@ -1,4 +1,4 @@
-import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box } from '@mui/material';
+import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box, TextField } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { appSelector, getCoordinates, ICoordinate, sendDeleteCoordinates, setCoordinatesPage, setUpdatedCoordinate } from "../../../storage/Slices/AppSlice";
 import React, { useState, useEffect } from 'react';
@@ -26,6 +26,8 @@ export default function CoordinatesTable() {
 
     const [openCreate, setOpenCreate] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
+    const [filters, setFilters] = useState<{ [key: string]: string }>({});
+    const [activeColumn, setActiveColumn] = useState<string | null>(null);
 
     const handleOpenCreate = () => {
         if (openUpdate === false) {
@@ -54,6 +56,59 @@ export default function CoordinatesTable() {
     };
 
 
+    const handleColumnClick = (columnName: string) => {
+        setActiveColumn(activeColumn === columnName ? null : columnName);
+        if (activeColumn === columnName) {
+            const newFilters = { ...filters };
+            delete newFilters[columnName];
+            setFilters(newFilters);
+        }
+    };
+
+    const handleFilterChange = (columnName: string, value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            [columnName]: value
+        }));
+    };
+
+    const getFilteredMovies = () => {
+        if (!coordinates) return [];
+        return coordinates.filter(movie => {
+            return Object.entries(filters).every(([column, filterValue]) => {
+                if (!filterValue) return true;
+                const movieValue = String(movie[column as keyof Coordinate] || '').toLowerCase();
+                return movieValue.includes(filterValue.toLowerCase());
+            });
+        });
+    };
+
+    const renderTableHeader = (columnName: string, label: string) => (
+        <TableCell
+            onClick={() => handleColumnClick(columnName)}
+            style={{ cursor: 'pointer', position: 'relative' }}
+        >
+            {label}
+            {activeColumn === columnName && (
+                <TextField
+                    size="small"
+                    value={filters[columnName] || ''}
+                    onChange={(e) => handleFilterChange(columnName, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        width: '100%'
+                    }}
+                />
+            )}
+        </TableCell>
+    );
+
+    const filteredMovies = getFilteredMovies();
 
 
 
@@ -69,18 +124,18 @@ export default function CoordinatesTable() {
                         <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>X</TableCell>
-                                    <TableCell>Y</TableCell>
-                                    <TableCell>Admin Can Modify</TableCell>
-                                    <TableCell>User ID</TableCell>
+                                    {renderTableHeader('id', 'ID')}
+                                    {renderTableHeader('x', 'X')}
+                                    {renderTableHeader('y', 'Y')}
+                                    {renderTableHeader('adminCanModify', 'Admin Can Modify')}
+                                    {renderTableHeader('userId', 'User ID')}
                                     <TableCell></TableCell>
                                     <TableCell></TableCell>
                                 </TableRow>
                             </TableHead>
 
                             <TableBody>
-                                {coordinates.map((row, rowIndex) => (
+                                {filteredMovies.map((row, rowIndex) => (
                                     <TableRow key={rowIndex}>
                                         <TableCell>{row.id}</TableCell>
                                         <TableCell>{row.x}</TableCell>
@@ -145,6 +200,28 @@ export default function CoordinatesTable() {
                         </TableHead>
                     </Table>
                 </TableContainer>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+
+                    <StyleButton text="Previous Page"
+                        disabled={isFetching || coordinatesPage === 0}
+                        type="button"
+                        onclick={() => { if (coordinatesPage > 0) { dispatch(setCoordinatesPage(coordinatesPage - 1)); dispatch(getCoordinates(coordinatesPage - 1)) } }} />
+                    <label style={{
+                        fontFamily: "Undertale",
+                        backgroundColor: 'black',
+                        color: 'white'
+                    }}>
+                        {coordinatesPage}
+                    </label>
+                    <StyleButton text="Next Page"
+                        disabled={isFetching}
+                        type="button"
+                        onclick={() => { dispatch(setCoordinatesPage(coordinatesPage + 1)); dispatch(getCoordinates(coordinatesPage + 1)) }} />
+                </Box>
             </Box>
         );
     }
