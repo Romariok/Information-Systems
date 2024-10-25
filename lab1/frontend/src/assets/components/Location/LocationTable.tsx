@@ -1,4 +1,4 @@
-import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box } from '@mui/material';
+import { TableBody, TableCell, TableContainer, TableHead, TableRow, Table, Box, TextField } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { appSelector, getLocation, ILocation, sendDeleteLocation, setLocationPage, setUpdatedLocation } from "../../../storage/Slices/AppSlice";
 import { AppDispatch } from '../../../storage/store';
@@ -24,6 +24,8 @@ export default function LocationsTable() {
     const { locations, isFetching, locationPage } = useSelector(appSelector);
     const [openCreate, setOpenCreate] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
+    const [filters, setFilters] = useState<{ [key: string]: string }>({});
+    const [activeColumn, setActiveColumn] = useState<string | null>(null);
 
     const handleOpenCreate = () => {
         if (openUpdate === false) {
@@ -51,6 +53,60 @@ export default function LocationsTable() {
 
     };
 
+    const handleColumnClick = (columnName: string) => {
+        setActiveColumn(activeColumn === columnName ? null : columnName);
+        if (activeColumn === columnName) {
+            const newFilters = { ...filters };
+            delete newFilters[columnName];
+            setFilters(newFilters);
+        }
+    };
+
+    const handleFilterChange = (columnName: string, value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            [columnName]: value
+        }));
+    };
+
+    const getFilteredMovies = () => {
+        if (!locations) return [];
+        return locations.filter(movie => {
+            return Object.entries(filters).every(([column, filterValue]) => {
+                if (!filterValue) return true;
+                const movieValue = String(movie[column as keyof Location] || '').toLowerCase();
+                return movieValue.includes(filterValue.toLowerCase());
+            });
+        });
+    };
+
+    const renderTableHeader = (columnName: string, label: string) => (
+        <TableCell
+            onClick={() => handleColumnClick(columnName)}
+            style={{ cursor: 'pointer', position: 'relative' }}
+        >
+            {label}
+            {activeColumn === columnName && (
+                <TextField
+                    size="small"
+                    value={filters[columnName] || ''}
+                    onChange={(e) => handleFilterChange(columnName, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        width: '100%'
+                    }}
+                />
+            )}
+        </TableCell>
+    );
+
+    const filteredMovies = getFilteredMovies();
+
 
     if (locations !== undefined && locations.length > 0) {
         return (
@@ -64,27 +120,27 @@ export default function LocationsTable() {
                         <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>X</TableCell>
-                                    <TableCell>Y</TableCell>
-                                    <TableCell>Z</TableCell>
-                                    <TableCell>Admin Can Modify</TableCell>
-                                    <TableCell>User ID</TableCell>
+                                    {renderTableHeader('id', 'ID')}
+                                    {renderTableHeader('name', 'Name')}
+                                    {renderTableHeader('x', 'X')}
+                                    {renderTableHeader('y', 'Y')}
+                                    {renderTableHeader('z', 'Z')}
+                                    {renderTableHeader('adminCanModify', 'Admin Can Modify')}
+                                    {renderTableHeader('userId', 'User ID')}
                                     <TableCell></TableCell>
                                     <TableCell></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {locations.map((row, i) => (
+                                {filteredMovies.map((row, i) => (
                                     <TableRow key={i}>
-                                        <TableCell>{row.id}</TableCell>
-                                        <TableCell>{row.name}</TableCell>
-                                        <TableCell>{row.x}</TableCell>
-                                        <TableCell>{row.y}</TableCell>
-                                        <TableCell>{row.z}</TableCell>
+                                        <TableCell>{String(row.id)}</TableCell>
+                                        <TableCell>{String(row.name)}</TableCell>
+                                        <TableCell>{String(row.x)}</TableCell>
+                                        <TableCell>{String(row.y)}</TableCell>
+                                        <TableCell>{String(row.z)}</TableCell>
                                         <TableCell>{String(row.adminCanModify)}</TableCell>
-                                        <TableCell>{row.userId}</TableCell>
+                                        <TableCell>{String(row.userId)}</TableCell>
                                         <TableCell><div>
                                             <StyleButton text="Update" onclick={(e) => handleOpenUpdate(row)} disabled={isFetching} type="button" />
                                             <LocationUpdateForm open={openUpdate} onClose={handleCloseUpdate} />
