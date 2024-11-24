@@ -34,4 +34,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
       @Query("SELECT DISTINCT m FROM Movie m WHERE m.director IN " +
            "(SELECT DISTINCT m2.director FROM Movie m2 WHERE m2.genre = :genre)")
       List<Movie> findMoviesByDirectorsWithMoviesInGenre(MovieGenre genre);
+
+      boolean existsByName(String name);
 }

@@ -1,7 +1,7 @@
 package itmo.is.lab1.person.dao;
 
 import itmo.is.lab1.location.model.Location;
-import itmo.is.lab1.person.model.Person;
+import itmo.is.lab1.person.model.*;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +15,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
    Person findByName(String name);
 
    List<Person> findAllByLocation(Location location);
+
+   boolean existsByNameAndEyeColorAndNationality(String name, Color eyeColor, Country nationality);
 }
