@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Long> {
-   boolean existsByXAndYAndZAndName(Double x, long y, Integer z, String name);
-
+   boolean existsByXAndYAndZ(Double x, long y, Integer z);
+   boolean existsByName(String name);
    Location findByName(String name);
 }

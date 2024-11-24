@@ -69,6 +69,9 @@ public class MovieService {
    }
 
    public MovieDTO createMovie(CreateMovieDTO createMovieDTO, HttpServletRequest request) {
+      if (movieRepository.existsByName(createMovieDTO.getName()))
+         throw new MovieAlreadyExistException(String.format("Movie %s already exists", createMovieDTO.getName()));
+
       Coordinates coordinate = coordinatesRepository.findById(createMovieDTO.getCoordinatesId())
             .orElseThrow(() -> new CoordinatesNotFoundException(
                   String.format("Coordinates with id %s not found", createMovieDTO.getCoordinatesId())));

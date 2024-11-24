@@ -56,13 +56,15 @@ public class LocationService {
    }
 
    public LocationDTO createLocation(CreateLocationDTO createLocationDTO, HttpServletRequest request) {
-      if (locationRepository.existsByXAndYAndZAndName(
+      if (locationRepository.existsByName(createLocationDTO.getName()))
+         throw new LocationAlreadyExistException(String.format("Location %s already exists", createLocationDTO.getName()));
+
+      if (locationRepository.existsByXAndYAndZ(
             createLocationDTO.getX(),
             createLocationDTO.getY(),
-            createLocationDTO.getZ(),
-            createLocationDTO.getName()))
-         throw new LocationAlreadyExistException(String.format("Location %s %.3f %d %d already exist",
-         createLocationDTO.getName(),createLocationDTO.getX(), createLocationDTO.getY(), createLocationDTO.getZ()));
+            createLocationDTO.getZ()))
+         throw new LocationAlreadyExistException(String.format("Location %.3f %d %d already exists",
+               createLocationDTO.getX(), createLocationDTO.getY(), createLocationDTO.getZ()));
 
       User user = findUserByRequest(request);
 

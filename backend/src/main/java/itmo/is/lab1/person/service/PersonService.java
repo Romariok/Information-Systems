@@ -55,6 +55,12 @@ public class PersonService {
             .orElseThrow(() -> new PersonNotFoundException(
                   String.format("Location with id %s not found", createPersonDTO.getLocationId())));
 
+      if (personRepository.existsByNameAndEyeColorAndNationality(createPersonDTO.getName(),
+            createPersonDTO.getEyeColor(), createPersonDTO.getNationality()))
+         throw new PersonAlreadyExistException(
+               String.format("Person with name %s, eye color %s, nationality %s already exists",
+                     createPersonDTO.getName(), createPersonDTO.getEyeColor(), createPersonDTO.getNationality()));
+
       User user = findUserByRequest(request);
 
       Person person = Person
