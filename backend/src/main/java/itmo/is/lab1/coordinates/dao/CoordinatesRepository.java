@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CoordinatesRepository extends JpaRepository<Coordinates, Long> {
    boolean existsByXAndY(Double x, long y);
+   Coordinates findByXAndY(Double x, long y);
 }

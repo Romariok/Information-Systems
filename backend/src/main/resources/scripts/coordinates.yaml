@@ -1,0 +1,72 @@
+coordinates:
+  - x: 6
+    adminCanModify: false
+  - x: 4.3
+    adminCanModify: false
+locations:
+  - name: lol
+    x: 3.3
+    y: 3
+    z: 3
+    adminCanModify: false
+  - name: mama
+    x: -3
+    y: 43
+    z: 65
+    adminCanModify: true
+  - name: vbbcc
+    x: -43.43
+    y: -43
+    z: 87
+    adminCanModify: false
+persons:
+  - name: PAPA
+    weight: 4
+    nationality: RUSSIA
+    eyeColor: GREEN
+    hairColor: BLUE
+    location:
+      name: gollll
+      x: 46.3
+      y: 8
+      z: -3
+      adminCanModify: false
+    adminCanModify: false
+  - name: lolff
+    weight: 200
+    nationality: VATICAN
+    eyeColor: BLUE
+    location:
+      name: gollll
+      x: 46.3
+      y: 8
+      z: -3
+      adminCanModify: false
+    adminCanModify: true
+movies:
+  - name: "Despicable Me 3"
+    coordinates:
+      x: 6
+      adminCanModify: false
+    oscarsCount: 0
+    budget: 33
+    totalBoxOffice: 33
+    mpaaRating: G
+    director:
+      name: MAMA
+      weight: 5343
+      nationality: UNITED_KINGDOM
+      eyeColor: BLUE
+      hairColor: BLUE
+      location:
+        name: something new
+        x: 46.3
+        y: 9
+        z: -3
+        adminCanModify: false
+      adminCanModify: false
+    length: 95
+    goldenPalmCount: -3
+    usaBoxOffice: 1000000
+    tagline: "The Minions are back!"
+    adminCanModify: false

@@ -12,7 +12,7 @@ import java.util.List;
 public interface PersonRepository extends JpaRepository<Person, Long> {
    boolean existsByName(String name);
 
-   Person findByName(String name);
+   Person findByNameAndEyeColorAndNationality(String name, Color eyeColor, Country nationality);
 
    List<Person> findAllByLocation(Location location);
 
