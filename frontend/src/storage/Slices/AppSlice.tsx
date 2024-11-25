@@ -899,6 +899,9 @@ export const AppSlice = createSlice({
       },
       setErrorMessage(state, action) {
          state.errorMessage = action.payload;
+      },
+      setSuccess(state, action) {
+         state.isSuccess = action.payload;
       }
    },
    extraReducers: (builder) => {
@@ -1292,7 +1295,8 @@ export const AppSlice = createSlice({
 
 
 export const { clearState, clearAllStates, setCoordinatesPage, setUpdatedCoordinate, setLocationPage, setUpdatedLocation,
-   setPersonPage, setUpdatedPerson, setMoviePage, setUpdatedMovie, setAdminRequestPage, setFetching, setError, setErrorMessage
+   setPersonPage, setUpdatedPerson, setMoviePage, setUpdatedMovie, setAdminRequestPage, setFetching, setError, setErrorMessage,
+   setSuccess
 } = AppSlice.actions;
 
 

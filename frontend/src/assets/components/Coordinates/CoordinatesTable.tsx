@@ -84,7 +84,7 @@ export default function CoordinatesTable() {
 
     const getSortedAndFilteredData = () => {
         if (!coordinates) return [];
-        
+
         let result = coordinates.filter(item => {
             return Object.entries(filters).every(([column, filterValue]) => {
                 if (!filterValue) return true;
@@ -97,22 +97,22 @@ export default function CoordinatesTable() {
             result = [...result].sort((a, b) => {
                 const aValue = a[sortConfig.field!];
                 const bValue = b[sortConfig.field!];
-                
+
                 if (typeof aValue === 'boolean') {
-                    return sortConfig.direction === 'asc' 
+                    return sortConfig.direction === 'asc'
                         ? (aValue === bValue ? 0 : aValue ? 1 : -1)
                         : (aValue === bValue ? 0 : aValue ? -1 : 1);
                 }
-                
+
                 if (typeof aValue === 'number' && typeof bValue === 'number') {
-                    return sortConfig.direction === 'asc' 
-                        ? aValue - bValue 
+                    return sortConfig.direction === 'asc'
+                        ? aValue - bValue
                         : bValue - aValue;
                 }
-                
+
                 const strA = String(aValue).toLowerCase();
                 const strB = String(bValue).toLowerCase();
-                return sortConfig.direction === 'asc' 
+                return sortConfig.direction === 'asc'
                     ? strA.localeCompare(strB)
                     : strB.localeCompare(strA);
             });
@@ -124,8 +124,8 @@ export default function CoordinatesTable() {
     const renderTableHeader = (columnName: string, label: string) => (
         <TableCell
             onClick={() => handleColumnClick(columnName)}
-            style={{ 
-                cursor: 'pointer', 
+            style={{
+                cursor: 'pointer',
                 position: 'relative',
             }}
         >
@@ -156,141 +156,84 @@ export default function CoordinatesTable() {
 
     const sortedAndFilteredData = getSortedAndFilteredData();
 
-    if (coordinates !== undefined && coordinates.length > 0) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
-                {isAuth && (
-                    <div>
-                        <StyleButton text="Create coordinate" onclick={handleOpenCreate} disabled={isFetching} type="button" />
-                        <CoordinateForm open={openCreate} onClose={handleCloseCreate} />
-                    </div>
-                )}
-                <TableContainer className='main__table-container'>
-                    <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-                        <TableHead>
-                            <TableRow>
-                                {renderTableHeader('id', 'ID')}
-                                {renderTableHeader('x', 'X')}
-                                {renderTableHeader('y', 'Y')}
-                                {renderTableHeader('adminCanModify', 'Admin Can Modify')}
-                                {renderTableHeader('userId', 'User ID')}
-                                <TableCell></TableCell>
-                                <TableCell></TableCell>
+
+    return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
+            {isAuth && (
+                <div>
+                    <StyleButton text="Create coordinate" onclick={handleOpenCreate} disabled={isFetching} type="button" />
+                    <CoordinateForm open={openCreate} onClose={handleCloseCreate} />
+                </div>
+            )}
+            <TableContainer className='main__table-container'>
+                <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+                    <TableHead>
+                        <TableRow>
+                            {renderTableHeader('id', 'ID')}
+                            {renderTableHeader('x', 'X')}
+                            {renderTableHeader('y', 'Y')}
+                            {renderTableHeader('adminCanModify', 'Admin Can Modify')}
+                            {renderTableHeader('userId', 'User ID')}
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {coordinates !== undefined && coordinates.length > 0 && sortedAndFilteredData.map((row, rowIndex) => (
+                            <TableRow key={rowIndex}>
+                                <TableCell>{row.id}</TableCell>
+                                <TableCell>{row.x}</TableCell>
+                                <TableCell>{row.y}</TableCell>
+                                <TableCell>{String(row.adminCanModify)}</TableCell>
+                                <TableCell>{row.userId}</TableCell>
+                                <TableCell>
+                                    <div>
+                                        <StyleButton text="Update" onclick={() => handleOpenUpdate(row)} disabled={isFetching} type="button" />
+                                        <CoordinateUpdateForm open={openUpdate} onClose={handleCloseUpdate} />
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <StyleButton text="Delete" onclick={() => handleDelete(row)} disabled={isFetching} type="button" />
+                                </TableCell>
                             </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {sortedAndFilteredData.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
-                                    <TableCell>{row.id}</TableCell>
-                                    <TableCell>{row.x}</TableCell>
-                                    <TableCell>{row.y}</TableCell>
-                                    <TableCell>{String(row.adminCanModify)}</TableCell>
-                                    <TableCell>{row.userId}</TableCell>
-                                    <TableCell>
-                                        <div>
-                                            <StyleButton text="Update" onclick={() => handleOpenUpdate(row)} disabled={isFetching} type="button" />
-                                            <CoordinateUpdateForm open={openUpdate} onClose={handleCloseUpdate} />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <StyleButton text="Delete" onclick={() => handleDelete(row)} disabled={isFetching} type="button" />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center'
+            }}>
+                <StyleButton
+                    text="Previous Page"
+                    disabled={isFetching || coordinatesPage === 0}
+                    type="button"
+                    onclick={() => {
+                        if (coordinatesPage > 0) {
+                            dispatch(setCoordinatesPage(coordinatesPage - 1));
+                            dispatch(getCoordinates(coordinatesPage - 1));
+                        }
+                    }}
+                />
+                <label style={{
+                    fontFamily: "Undertale",
+                    backgroundColor: 'black',
+                    color: 'white'
                 }}>
-                    <StyleButton 
-                        text="Previous Page"
-                        disabled={isFetching || coordinatesPage === 0}
-                        type="button"
-                        onclick={() => { 
-                            if (coordinatesPage > 0) { 
-                                dispatch(setCoordinatesPage(coordinatesPage - 1));
-                                dispatch(getCoordinates(coordinatesPage - 1));
-                            }
-                        }} 
-                    />
-                    <label style={{
-                        fontFamily: "Undertale",
-                        backgroundColor: 'black',
-                        color: 'white'
-                    }}>
-                        {coordinatesPage}
-                    </label>
-                    <StyleButton 
-                        text="Next Page"
-                        disabled={isFetching}
-                        type="button"
-                        onclick={() => { 
-                            dispatch(setCoordinatesPage(coordinatesPage + 1));
-                            dispatch(getCoordinates(coordinatesPage + 1));
-                        }} 
-                    />
-                </Box>
+                    {coordinatesPage}
+                </label>
+                <StyleButton
+                    text="Next Page"
+                    disabled={isFetching}
+                    type="button"
+                    onclick={() => {
+                        dispatch(setCoordinatesPage(coordinatesPage + 1));
+                        dispatch(getCoordinates(coordinatesPage + 1));
+                    }}
+                />
             </Box>
-        );
-    } else {
-        return (
-            <Box sx={{ display: 'flex', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
-                {isAuth && (
-                    <div>
-                        <StyleButton text="Create coordinate" onclick={handleOpenCreate} disabled={isFetching} type="button" />
-                        <CoordinateForm open={openCreate} onClose={handleCloseCreate} />
-                    </div>
-                )}
-                <TableContainer className='main__table-container' sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-                    <Table className="main__table" aria-label="data table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>X</TableCell>
-                                <TableCell>Y</TableCell>
-                                <TableCell>Admin Can Modify</TableCell>
-                                <TableCell>User ID</TableCell>
-                            </TableRow>
-                        </TableHead>
-                    </Table>
-                </TableContainer>
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }}>
-                    <StyleButton 
-                        text="Previous Page"
-                        disabled={isFetching || coordinatesPage === 0}
-                        type="button"
-                        onclick={() => { 
-                            if (coordinatesPage > 0) { 
-                                dispatch(setCoordinatesPage(coordinatesPage - 1));
-                                dispatch(getCoordinates(coordinatesPage - 1));
-                            }
-                        }} 
-                    />
-                    <label style={{
-                        fontFamily: "Undertale",
-                        backgroundColor: 'black',
-                        color: 'white'
-                    }}>
-                        {coordinatesPage}
-                    </label>
-                    <StyleButton 
-                        text="Next Page"
-                        disabled={isFetching}
-                        type="button"
-                        onclick={() => { 
-                            dispatch(setCoordinatesPage(coordinatesPage + 1));
-                            dispatch(getCoordinates(coordinatesPage + 1));
-                        }} 
-                    />
-                </Box>
-            </Box>
-        );
-    }
+        </Box>
+    );
+
 }

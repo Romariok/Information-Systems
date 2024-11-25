@@ -4,7 +4,7 @@ import {
 } from 'react-router-dom';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { appSelector, clearState, getAdminRequest, getCoordinates, getLocation, getMovie, getMovieAll, getPerson, getUserRole, setCoordinatesPage } from "../storage/Slices/AppSlice";
+import { appSelector, clearState, getAdminRequest, getCoordinates, getLocation, getMovie, getMovieAll, getPerson, getUserRole } from "../storage/Slices/AppSlice";
 
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
@@ -21,6 +21,7 @@ import MovieCreationIcon from '@mui/icons-material/MovieCreation';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import MapIcon from '@mui/icons-material/Map';
+import PublishIcon from '@mui/icons-material/Publish';
 import { AppDispatch } from '../storage/store';
 import React, { useEffect } from 'react';
 
@@ -107,12 +108,16 @@ function MainPage() {
               <ListItemLink to="/app/location" primary="Location" icon={<AddLocationIcon color='primary' />} />
               <ListItemLink to="/app/coordinates" primary="Coordinates" icon={<AddLocationAltIcon color='primary' />} />
             </Grid>
-            <Grid item sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+            <Grid item sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
               <ListItemLink to="/app/person" primary="Person" icon={<PersonAddIcon color='primary' />} />
               <ListItemLink to="/app/admin" primary="Admin Requests" icon={<AddModeratorIcon color='primary' />} />
               <ListItemLink to="/app/special" primary="Special Functions" icon={<MoreHorizIcon color='primary' />} />
             </Grid>
-            <ListItemLink to="/app/map" primary="Map" icon={<MapIcon color='primary' />} />
+            <Grid item sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+              <ListItemLink to="/app/import" primary="Import" icon={<PublishIcon color='primary' />} />
+              <ListItemLink to="/app/map" primary="Map" icon={<MapIcon color='primary' />} />
+            </Grid>
+
           </Grid>
 
         </List>
