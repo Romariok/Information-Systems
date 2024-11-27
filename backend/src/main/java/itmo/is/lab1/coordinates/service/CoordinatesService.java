@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.Pagification;
@@ -19,6 +20,7 @@ import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -49,7 +51,8 @@ public class CoordinatesService {
             })
             .toList();
    }
-
+   
+   @Transactional
    public CoordinatesDTO createCoordinate(CreateCoordinatesDTO createCoordinatesDTO, HttpServletRequest request) {
       if (coordinatesRepository.existsByXAndY(
             createCoordinatesDTO.getX(),
@@ -77,6 +80,7 @@ public class CoordinatesService {
             coordinates.getUser().getId());
    }
 
+   @Transactional
    public CoordinatesDTO alterCoordinate(Long coordinatesId, AlterCoordinatesDTO alterCoordinatesDTO,
          HttpServletRequest request) {
       Coordinates coordinates = coordinatesRepository.findById(coordinatesId)
@@ -102,6 +106,7 @@ public class CoordinatesService {
             coordinates.getUser().getId());
    }
 
+   @Transactional
    public void deleteCoordinates(Long coordinatesId, HttpServletRequest request) {
       Coordinates coordinates = coordinatesRepository.findById(coordinatesId)
             .orElseThrow(() -> new CoordinatesNotFoundException(
@@ -118,8 +123,9 @@ public class CoordinatesService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      System.out.println("Username: " + username);
-      return userRepository.findByUsername(username).get();
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
    private boolean checkPermission(Coordinates coordinates, HttpServletRequest request) {

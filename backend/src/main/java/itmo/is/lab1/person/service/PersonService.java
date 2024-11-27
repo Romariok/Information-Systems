@@ -2,6 +2,7 @@ package itmo.is.lab1.person.service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.location.dto.LocationDTO;
@@ -19,6 +20,7 @@ import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PersonService {
    private final PersonRepository personRepository;
    private final LocationRepository locationRepository;
@@ -156,7 +159,9 @@ public class PersonService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      return userRepository.findByUsername(username).get();
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
    private boolean checkPermission(Person person, HttpServletRequest request) {

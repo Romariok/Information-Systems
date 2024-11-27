@@ -1,19 +1,16 @@
 package itmo.is.lab1.user.service;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.user.model.AdminRequest;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.Pagification;
-import itmo.is.lab1.movie.model.Movie;
-import itmo.is.lab1.person.model.Person;
 import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.AdminRequestRepository;
 import itmo.is.lab1.user.dao.UserRepository;
@@ -85,7 +82,9 @@ public class AdminService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      return userRepository.findByUsername(username).get();
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
 
