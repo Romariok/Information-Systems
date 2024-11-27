@@ -2,6 +2,7 @@ package itmo.is.lab1.location.service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.location.model.Location;
@@ -18,6 +19,7 @@ import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -55,6 +57,7 @@ public class LocationService {
             .toList();
    }
 
+   @Transactional
    public LocationDTO createLocation(CreateLocationDTO createLocationDTO, HttpServletRequest request) {
       if (locationRepository.existsByName(createLocationDTO.getName()))
          throw new LocationAlreadyExistException(String.format("Location %s already exists", createLocationDTO.getName()));
@@ -90,6 +93,7 @@ public class LocationService {
             location.getUser().getId());
    }
 
+   @Transactional
    public LocationDTO alterLocation(Long locationId, AlterLocationDTO alterLocationDTO,
          HttpServletRequest request) {
       Location location = locationRepository.findById(locationId)
@@ -121,6 +125,7 @@ public class LocationService {
             location.getUser().getId());
    }
 
+   @Transactional
    public void deleteLocation(Long locationId, HttpServletRequest request) {
       Location location = locationRepository.findById(locationId)
             .orElseThrow(() -> new LocationNotFoundException(
@@ -142,7 +147,9 @@ public class LocationService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      return userRepository.findByUsername(username).get();
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
    private boolean checkPermission(Location location, HttpServletRequest request) {

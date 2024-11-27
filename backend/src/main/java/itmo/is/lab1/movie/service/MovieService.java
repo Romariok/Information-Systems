@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import itmo.is.lab1.Pagification;
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MovieService {
    private final PersonRepository personRepository;
    private final CoordinatesRepository coordinatesRepository;
@@ -193,6 +195,7 @@ public class MovieService {
       return toMovieDTO(movie);
    }
 
+   @Transactional
    public void deleteMovie(Long movieId, HttpServletRequest request) {
       Movie movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new CoordinatesNotFoundException(
@@ -252,7 +255,6 @@ public class MovieService {
             .toList();
    }
 
-   @Transactional
    public void removeOscarsFromDirectorsWithMoviesInGenre(MovieGenre genre, HttpServletRequest request) {
       List<Movie> movies = movieRepository.findMoviesByDirectorsWithMoviesInGenre(genre);
       if (jwtUtils.parseJwt(request) == null || jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request)) == null)
@@ -351,7 +353,9 @@ public class MovieService {
 
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      return userRepository.findByUsername(username).get();
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
    private boolean checkPermission(Movie movie, HttpServletRequest request) {
