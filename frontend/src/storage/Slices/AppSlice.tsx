@@ -9,6 +9,7 @@ import { CoordinatesArray } from "../../assets/components/Coordinates/Coordinate
 import { AdminRequestArray } from "../../assets/components/Admin/AdminRequestTable";
 import { MovieArray } from "../../assets/components/Movie/MovieTable";
 import { PersonArray } from "../../assets/components/Person/PersonTable";
+import { ImportArray, OperationStatus } from "../../assets/components/ImportHistoryTable";
 
 export interface ICoordinate {
    id: number,
@@ -158,6 +159,14 @@ interface IRole {
    role: string;
 }
 
+export interface IImport {
+   id: number;
+   importStatus: OperationStatus;
+   importTime: string;
+   importedCount: number;
+   userId: number;
+};
+
 
 interface AppState {
    isFetching: boolean,
@@ -179,7 +188,9 @@ interface AppState {
    moviePage: number,
    movie: IMovie | null,
    adminRequestPage: number,
-   moviesAll: MovieArray
+   moviesAll: MovieArray,
+   importPage: number,
+   imports: ImportArray
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const getCoordinates = createAsyncThunk<
@@ -813,6 +824,65 @@ export const sendApproveAdminRequest = createAsyncThunk<
    }
 );
 
+export const getImport = createAsyncThunk<
+   any,
+   number,
+   { rejectValue: string }
+>(
+   "app/import",
+   async (page, thunkAPI) => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+         const link = "http://localhost:5252/import";
+
+         const response = await axios.get<IImport[]>(link, {
+            params: { from: page * 10, size: 10 }, headers: {
+               "Authorization": `Bearer ${localStorage.getItem('token')}`
+            }
+         });
+         const data = response.data;
+         if (response.status === 200) {
+            return data;
+         } else {
+            return thunkAPI.rejectWithValue(data.toString());
+         }
+      } catch (e) {
+         const error = e as AxiosError<string>;
+         console.log("Error", error.response?.data);
+         return thunkAPI.rejectWithValue(error.response?.data || "An error occurred");
+      }
+   }
+);
+
+export const sendDeleteImport = createAsyncThunk<
+   IImport,
+   { id: number },
+   { rejectValue: string }
+>(
+   "app/import/sendDeleteImport",
+   async ({ id }, thunkAPI) => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+         const link = `http://localhost:5252/import/${id}`;
+         const response = await axios.delete(link, {
+            headers: {
+               "Authorization": 'Bearer ' + String(localStorage.getItem('token'))
+            }
+         });
+         const data = response.data;
+         if (response.status === 200) {
+            return data;
+         } else {
+            return thunkAPI.rejectWithValue(data.toString());
+         }
+      } catch (e) {
+         const error = e as AxiosError<string>;
+         console.log("Error", error.response?.data);
+         return thunkAPI.rejectWithValue(error.response?.data || "An error occurred");
+      }
+   }
+);
+
 
 const initialState: AppState = {
    isFetching: false,
@@ -835,6 +905,8 @@ const initialState: AppState = {
    moviePage: 0,
    movie: null,
    adminRequestPage: 0,
+   importPage: 0,
+   imports: [] as ImportArray
 };
 
 export const AppSlice = createSlice({
@@ -902,6 +974,9 @@ export const AppSlice = createSlice({
       },
       setSuccess(state, action) {
          state.isSuccess = action.payload;
+      },
+      setImportPage(state, action) {
+         state.importPage = action.payload;
       }
    },
    extraReducers: (builder) => {
@@ -1289,6 +1364,40 @@ export const AppSlice = createSlice({
          .addCase(getMovieAll.pending, (state) => {
             state.isFetching = true;
          })
+         .addCase(getImport.fulfilled, (state, action) => {
+            state.isFetching = false;
+            state.imports = action.payload;
+            return state;
+         })
+         .addCase(getImport.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            state.errorMessage = (action.payload as { message?: string }).message || "An error occurred";
+            state.imports = [];
+         })
+         .addCase(getImport.pending, (state) => {
+            state.isFetching = true;
+         })
+         .addCase(sendDeleteImport.fulfilled, (state) => {
+            state.isFetching = false;
+            return state;
+         })
+         .addCase(sendDeleteImport.rejected, (state, action) => {
+            state.isFetching = false;
+            state.isError = true;
+            if (action?.payload?.status == 500) {
+               state.errorMessage = "You have no rights to commit this!";
+            }
+            else if (action?.payload?.status == 400) {
+               state.errorMessage = "Invalid parameters!";
+            }
+            else {
+               state.errorMessage = (action.payload as { data?: string }).data || "An error occurred";
+            }
+         })
+         .addCase(sendDeleteImport.pending, (state) => {
+            state.isFetching = true;
+         })
    }
 })
 
@@ -1296,7 +1405,7 @@ export const AppSlice = createSlice({
 
 export const { clearState, clearAllStates, setCoordinatesPage, setUpdatedCoordinate, setLocationPage, setUpdatedLocation,
    setPersonPage, setUpdatedPerson, setMoviePage, setUpdatedMovie, setAdminRequestPage, setFetching, setError, setErrorMessage,
-   setSuccess
+   setSuccess, setImportPage
 } = AppSlice.actions;
 
 

@@ -9,6 +9,7 @@ import { Alert } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../storage/store';
+import ImportHistoryTable from '../assets/components/ImportHistoryTable';
 
 function ImportFile() {
    const dispatch = useDispatch<AppDispatch>();
@@ -39,7 +40,10 @@ function ImportFile() {
    return (
       <>
          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column', mt: '10%' }}>
-            {isAuth && <YamlUploader />}
+            {isAuth && <>
+               <YamlUploader />
+               <ImportHistoryTable />
+            </>}
             {!isAuth && <Box component="form" noValidate sx={{
                mt: 1, marginTop: '8',
                display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px',

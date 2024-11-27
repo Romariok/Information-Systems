@@ -38,7 +38,7 @@ interface Movie {
     totalBoxOffice: number;
     usaBoxOffice: number;
     coordinatesId: number;
-    directorId: number; 
+    directorId: number;
     operatorId: number;
     screenwriterId: number;
     adminCanModify: boolean;
@@ -183,41 +183,42 @@ export default function MovieTable() {
 
     const sortedAndFilteredData = getSortedAndFilteredData();
 
-    if (movies !== undefined && movies.length > 0) {
-        return (
-            <>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
-                    {isAuth && <div>
-                        <StyleButton text="Create movie" onclick={handleOpenCreate} disabled={isFetching} type="button" />
-                        <MovieForm open={openCreate} onClose={handleCloseCreate} />
-                    </div>}
 
-                    <TableContainer className='main__table-container'>
-                        <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-                            <TableHead>
-                                <TableRow>
-                                    {renderTableHeader('id', 'ID')}
-                                    {renderTableHeader('budget', 'Budget')}
-                                    {renderTableHeader('creationDate', 'Creation Date')}
-                                    {renderTableHeader('genre', 'Genre')}
-                                    {renderTableHeader('goldenPalmCount', 'Golden Palm Count')}
-                                    {renderTableHeader('length', 'Length')}
-                                    {renderTableHeader('mpaaRating', 'MPAA Rating')}
-                                    {renderTableHeader('name', 'Name')}
-                                    {renderTableHeader('oscarsCount', 'Oscars Count')}
-                                    {renderTableHeader('tagline', 'Tagline')}
-                                    {renderTableHeader('totalBoxOffice', 'Total Box Office')}
-                                    {renderTableHeader('usaBoxOffice', 'USA Box Office')}
-                                    {renderTableHeader('coordinatesId', 'Coordinates ID')}
-                                    {renderTableHeader('directorId', 'Director ID')}
-                                    {renderTableHeader('operatorId', 'Operator ID')}
-                                    {renderTableHeader('screenwriterId', 'ScreenWriter ID')}
-                                    {renderTableHeader('adminCanModify', 'Admin Can Modify')}
-                                    {renderTableHeader('userId', 'User ID')}
-                                    <TableCell></TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-                            </TableHead>
+    return (
+        <>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
+                {isAuth && <div>
+                    <StyleButton text="Create movie" onclick={handleOpenCreate} disabled={isFetching} type="button" />
+                    <MovieForm open={openCreate} onClose={handleCloseCreate} />
+                </div>}
+
+                <TableContainer className='main__table-container'>
+                    <Table className="main__table" aria-label="data table" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+                        <TableHead>
+                            <TableRow>
+                                {renderTableHeader('id', 'ID')}
+                                {renderTableHeader('budget', 'Budget')}
+                                {renderTableHeader('creationDate', 'Creation Date')}
+                                {renderTableHeader('genre', 'Genre')}
+                                {renderTableHeader('goldenPalmCount', 'Golden Palm Count')}
+                                {renderTableHeader('length', 'Length')}
+                                {renderTableHeader('mpaaRating', 'MPAA Rating')}
+                                {renderTableHeader('name', 'Name')}
+                                {renderTableHeader('oscarsCount', 'Oscars Count')}
+                                {renderTableHeader('tagline', 'Tagline')}
+                                {renderTableHeader('totalBoxOffice', 'Total Box Office')}
+                                {renderTableHeader('usaBoxOffice', 'USA Box Office')}
+                                {renderTableHeader('coordinatesId', 'Coordinates ID')}
+                                {renderTableHeader('directorId', 'Director ID')}
+                                {renderTableHeader('operatorId', 'Operator ID')}
+                                {renderTableHeader('screenwriterId', 'ScreenWriter ID')}
+                                {renderTableHeader('adminCanModify', 'Admin Can Modify')}
+                                {renderTableHeader('userId', 'User ID')}
+                                <TableCell></TableCell>
+                                <TableCell></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        {movies !== undefined && movies.length > 0 &&
                             <TableBody>
                                 {sortedAndFilteredData.map((row: Movie, i: number) => (
                                     <TableRow key={i}>
@@ -251,96 +252,38 @@ export default function MovieTable() {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                        </Table>
-                    </TableContainer>
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center'
+                        }
+                    </Table>
+                </TableContainer>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <StyleButton
+                        text="Previous Page"
+                        disabled={isFetching || moviePage === 0}
+                        type="button"
+                        onclick={() => { if (moviePage > 0) { dispatch(setMoviePage(moviePage - 1)); dispatch(getMovie(moviePage - 1)) } }}
+                    />
+                    <label style={{
+                        fontFamily: "Undertale",
+                        backgroundColor: 'black',
+                        color: 'white'
                     }}>
-                        <StyleButton
-                            text="Previous Page"
-                            disabled={isFetching || moviePage === 0}
-                            type="button"
-                            onclick={() => { if (moviePage > 0) { dispatch(setMoviePage(moviePage - 1)); dispatch(getMovie(moviePage - 1)) } }}
-                        />
-                        <label style={{
-                            fontFamily: "Undertale",
-                            backgroundColor: 'black',
-                            color: 'white'
-                        }}>
-                            {moviePage}
-                        </label>
-                        <StyleButton
-                            text="Next Page"
-                            disabled={isFetching}
-                            type="button"
-                            onclick={() => { dispatch(setMoviePage(moviePage + 1)); dispatch(getMovie(moviePage + 1)) }}
-                        />
-                    </Box>
+                        {moviePage}
+                    </label>
+                    <StyleButton
+                        text="Next Page"
+                        disabled={isFetching}
+                        type="button"
+                        onclick={() => { dispatch(setMoviePage(moviePage + 1)); dispatch(getMovie(moviePage + 1)) }}
+                    />
                 </Box>
-            </>
-        );
-    } else {
-        return (
-            <>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'hidden', flexDirection: 'column' }}>
-                    {isAuth && <div>
-                        <StyleButton text="Create movie" onclick={handleOpenCreate} disabled={isFetching} type="button" />
-                        <MovieForm open={openCreate} onClose={handleCloseCreate} />
-                    </div>}
-                    <TableContainer className='main__table-container' sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-                        <Table className="main__table" aria-label="data table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>Budget</TableCell>
-                                    <TableCell>Creation Date</TableCell>
-                                    <TableCell>Genre</TableCell>
-                                    <TableCell>Golden Palm Count</TableCell>
-                                    <TableCell>Length</TableCell>
-                                    <TableCell>MPAA Rating</TableCell>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Oscars Count</TableCell>
-                                    <TableCell>Tagline</TableCell>
-                                    <TableCell>Total Box Office</TableCell>
-                                    <TableCell>Usa Box Office</TableCell>
-                                    <TableCell>Coordinates ID</TableCell>
-                                    <TableCell>Director ID</TableCell>
-                                    <TableCell>Operator ID</TableCell>
-                                    <TableCell>ScreenWriter ID</TableCell>
-                                    <TableCell>Admin Can Modify</TableCell>
-                                    <TableCell>User ID</TableCell>
-                                </TableRow>
-                            </TableHead>
-                        </Table>
-                    </TableContainer>
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                    }}>
+            </Box>
+        </>
+    );
 
-                        <StyleButton text="Previous Page"
-                            disabled={isFetching || moviePage === 0}
-                            type="button"
-                            onclick={() => { if (moviePage > 0) { dispatch(setMoviePage(moviePage - 1)); dispatch(getMovie(moviePage - 1)) } }} />
-                        <label style={{
-                            fontFamily: "Undertale",
-                            backgroundColor: 'black',
-                            color: 'white'
-                        }}>
-                            {moviePage}
-                        </label>
-                        <StyleButton text="Next Page"
-                            disabled={isFetching}
-                            type="button"
-                            onclick={() => { dispatch(setMoviePage(moviePage + 1)); dispatch(getMovie(moviePage + 1)) }} />
-                    </Box>
-                </Box>
-            </>
-        );
-    }
 }
 
 
