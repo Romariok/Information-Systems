@@ -13,7 +13,12 @@ import ImportHistoryTable from '../assets/components/ImportHistoryTable';
 
 function ImportFile() {
    const dispatch = useDispatch<AppDispatch>();
-   const { isAuth, isError, errorMessage, isSuccess } = useSelector(appSelector);
+   const { isAuth, isError, errorMessage, isSuccess } = useSelector(appSelector) as {
+      isAuth: boolean;
+      isError: boolean;
+      errorMessage: string;
+      isSuccess: boolean;
+   };
    const [openError, setOpenError] = useState<boolean>(false);
 
    useEffect(() => {
