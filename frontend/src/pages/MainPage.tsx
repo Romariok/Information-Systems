@@ -4,7 +4,7 @@ import {
 } from 'react-router-dom';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { appSelector, clearState, getAdminRequest, getCoordinates, getLocation, getMovie, getMovieAll, getPerson, getUserRole } from "../storage/Slices/AppSlice";
+import { appSelector, clearState, getAdminRequest, getCoordinates, getLocation, getMovie, getMovieAll, getPerson, getUserRole, getImport } from "../storage/Slices/AppSlice";
 
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
@@ -50,7 +50,7 @@ const switchPlay = () => {
 
 function MainPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { coordinatesPage, locationPage, personPage, moviePage, adminRequestPage } = useSelector(appSelector);
+  const { coordinatesPage, locationPage, personPage, moviePage, adminRequestPage, importPage } = useSelector(appSelector);
 
 
   useEffect(() => {
@@ -62,6 +62,7 @@ function MainPage() {
       dispatch(getMovie(moviePage));
       dispatch(getMovieAll());
       dispatch(getAdminRequest(adminRequestPage));
+      dispatch(getImport(importPage));
 
       if (localStorage.getItem('username') !== undefined && localStorage.getItem('username') !== null) {
         dispatch(getUserRole(localStorage.getItem('username') as string));
@@ -80,6 +81,7 @@ function MainPage() {
           dispatch(getMovie(moviePage));
           dispatch(getMovieAll());
           dispatch(getAdminRequest(adminRequestPage));
+          dispatch(getImport(importPage));
         },
           {
             "Authorization": `Bearer ${localStorage.getItem('token')}`,

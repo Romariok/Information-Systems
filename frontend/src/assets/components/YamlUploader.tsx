@@ -25,7 +25,8 @@ const YamlUploader = () => {
         })
         .catch(error => {
             dispatch(setError(true));
-            dispatch(setErrorMessage(error.response.data.message));
+            console.log(error.response.data);
+            dispatch(setErrorMessage(error.response.data));
         });
     }, []);
 

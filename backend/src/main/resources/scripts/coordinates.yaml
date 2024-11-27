@@ -66,7 +66,7 @@ movies:
         adminCanModify: false
       adminCanModify: false
     length: 95
-    goldenPalmCount: -3
+    goldenPalmCount: 2
     usaBoxOffice: 1000000
     tagline: "The Minions are back!"
     adminCanModify: false

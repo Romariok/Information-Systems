@@ -4,15 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.Yaml;
 
+import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
 import itmo.is.lab1.coordinates.model.Coordinates;
 import itmo.is.lab1.location.dao.LocationRepository;
@@ -26,14 +33,18 @@ import itmo.is.lab1.person.model.Color;
 import itmo.is.lab1.person.model.Country;
 import itmo.is.lab1.person.model.Person;
 import itmo.is.lab1.user.dao.UserRepository;
+import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.utils.exceptions.CoordinatesAlreadyExistException;
 import itmo.is.lab1.utils.exceptions.LocationAlreadyExistException;
 import itmo.is.lab1.utils.exceptions.MovieAlreadyExistException;
 import itmo.is.lab1.utils.exceptions.PersonAlreadyExistException;
+import itmo.is.lab1.yaml_import.dao.ImportHistoryRepository;
+import itmo.is.lab1.yaml_import.dto.ImportHistoryDTO;
+import itmo.is.lab1.yaml_import.model.ImportHistory;
+import itmo.is.lab1.yaml_import.model.OperationStatus;
 import itmo.is.lab1.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -44,36 +55,41 @@ public class ImportService {
    private final UserRepository userRepository;
    private final PersonRepository personRepository;
    private final MovieRepository movieRepository;
+   private final ImportHistoryRepository importHistoryRepository;
    private final SimpMessagingTemplate simpMessagingTemplate;
    private final JwtUtils jwtUtils;
+   private int importedCount = 0;
 
-   @Transactional(rollbackOn = Exception.class)
+   @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
    public void importFile(MultipartFile file, HttpServletRequest request) throws IOException {
+      importedCount = 0;
       Yaml yaml = new Yaml();
       InputStream inputStream = file.getInputStream();
-
       HashMap<String, List<HashMap<String, Object>>> data = yaml.load(inputStream);
       User user = findUserByRequest(request);
       if (data.containsKey("coordinates")) {
          List<HashMap<String, Object>> coordinatesList = data.get("coordinates");
-         if (coordinatesList == null)
+         if (coordinatesList == null) {
             throw new IllegalArgumentException("Coordinates list is empty");
+         }
          for (HashMap<String, Object> coordData : coordinatesList) {
             parseAndSaveCoordinate(coordData, user, false);
          }
       }
       if (data.containsKey("locations")) {
          List<HashMap<String, Object>> locationsList = data.get("locations");
-         if (locationsList == null)
+         if (locationsList == null) {
             throw new IllegalArgumentException("Locations list is empty");
+         }
          for (HashMap<String, Object> locationData : locationsList) {
             parseAndSaveLocation(locationData, user, false);
          }
       }
       if (data.containsKey("persons")) {
          List<HashMap<String, Object>> personsList = data.get("persons");
-         if (personsList == null)
+         if (personsList == null) {
             throw new IllegalArgumentException("Persons list is empty");
+         }
          for (HashMap<String, Object> personData : personsList) {
             parseAndSavePerson(personData, user, false);
          }
@@ -81,15 +97,20 @@ public class ImportService {
 
       if (data.containsKey("movies")) {
          List<HashMap<String, Object>> moviesList = data.get("movies");
-         if (moviesList == null)
+         if (moviesList == null) {
             throw new IllegalArgumentException("Movies list is empty");
+         }
          for (HashMap<String, Object> movieData : moviesList) {
             parseAndSaveMovie(movieData, user);
          }
       }
       simpMessagingTemplate.convertAndSend("/topic", "Import completed");
+      ImportHistory importHistory = ImportHistory.builder().user(user).importedCount(importedCount)
+            .status(OperationStatus.SUCCESS).importTime(LocalDateTime.now()).build();
+      importHistoryRepository.save(importHistory);
    }
 
+   @Transactional(propagation = Propagation.MANDATORY)
    private Coordinates parseAndSaveCoordinate(HashMap<String, Object> coordData, User user, boolean inner) {
       if (!coordData.containsKey("x") || !coordData.containsKey("adminCanModify")) {
          throw new IllegalArgumentException("Coordinate data is missing. X and adminCanModify are required");
@@ -115,7 +136,7 @@ public class ImportService {
             throw new IllegalArgumentException("Invalid data type for y coordinate. Expected a Long.", e);
          }
       }
-      Boolean adminCanModify = parseAdminCanModify(coordData);
+      Boolean adminCanModify = parseAdminCanModify(coordData, user);
 
       Coordinates coordinate = new Coordinates();
       if (x > 500 || x < -500) {
@@ -147,9 +168,11 @@ public class ImportService {
       }
 
       coordinatesRepository.save(coordinate);
+      incrementImportedCount();
       return coordinate;
    }
 
+   @Transactional(propagation = Propagation.MANDATORY)
    private Location parseAndSaveLocation(HashMap<String, Object> locationData, User user, boolean inner) {
       if (!locationData.containsKey("name") || !locationData.containsKey("x")
             || !locationData.containsKey("z") || !locationData.containsKey("adminCanModify")) {
@@ -189,7 +212,7 @@ public class ImportService {
       } catch (ClassCastException e) {
          throw new IllegalArgumentException("Invalid data type for z coordinate in location. Expected an integer.", e);
       }
-      Boolean adminCanModify = parseAdminCanModify(locationData);
+      Boolean adminCanModify = parseAdminCanModify(locationData, user);
 
       Location location = new Location();
 
@@ -219,20 +242,23 @@ public class ImportService {
          return locationRepository.findByName(location.getName());
       }
 
-      if (locationRepository.existsByName(location.getName()))
+      if (locationRepository.existsByName(location.getName())) {
          throw new LocationAlreadyExistException(String.format("Location %s already exists", location.getName()));
-
+      }
       if (locationRepository.existsByXAndYAndZ(
             location.getX(),
             location.getY(),
-            location.getZ()))
+            location.getZ())) {
          throw new LocationAlreadyExistException(String.format("Location %.3f %d %d already exists by name %s",
                location.getX(), location.getY(), location.getZ(), location.getName()));
+      }
       locationRepository.save(location);
+      incrementImportedCount();
       return location;
    }
 
    @SuppressWarnings("unchecked")
+   @Transactional(propagation = Propagation.MANDATORY)
    private Movie parseAndSaveMovie(HashMap<String, Object> movieData, User user) {
       if (!movieData.containsKey("name") || !movieData.containsKey("adminCanModify")
             || !movieData.containsKey("coordinates")
@@ -261,6 +287,7 @@ public class ImportService {
       }
 
       if (movieData.get("name") == null) {
+
          throw new IllegalArgumentException("Movie name cannot be null");
       }
       String name = movieData.get("name").toString();
@@ -361,7 +388,7 @@ public class ImportService {
          }
       }
 
-      Boolean adminCanModify = parseAdminCanModify(movieData);
+      Boolean adminCanModify = parseAdminCanModify(movieData, user);
 
       Movie movie = new Movie();
 
@@ -407,10 +434,12 @@ public class ImportService {
       movie.setCreationDate(LocalDateTime.now());
 
       movieRepository.save(movie);
+      incrementImportedCount();
       return movie;
    }
 
    @SuppressWarnings("unchecked")
+   @Transactional(propagation = Propagation.MANDATORY)
    private Person parseAndSavePerson(HashMap<String, Object> personData, User user, boolean inner) {
       if (!personData.containsKey("name") || !personData.containsKey("weight")
             || !personData.containsKey("nationality") || !personData.containsKey("eyeColor")
@@ -471,7 +500,7 @@ public class ImportService {
          }
       }
 
-      Boolean adminCanModify = parseAdminCanModify(personData);
+      Boolean adminCanModify = parseAdminCanModify(personData, user);
 
       Person person = new Person();
 
@@ -502,17 +531,11 @@ public class ImportService {
       }
 
       personRepository.save(person);
-
+      incrementImportedCount();
       return person;
    }
 
-   private User findUserByRequest(HttpServletRequest request) {
-      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      System.out.println("Username: " + username);
-      return userRepository.findByUsername(username).get();
-   }
-
-   private Boolean parseAdminCanModify(HashMap<String, Object> data) {
+   private Boolean parseAdminCanModify(HashMap<String, Object> data, User user) {
       if (data.get("adminCanModify") == null) {
          throw new IllegalArgumentException("adminCanModify cannot be null");
       }
@@ -521,6 +544,59 @@ public class ImportService {
          throw new IllegalArgumentException("adminCanModify must be true or false");
       }
       return Boolean.parseBoolean(adminCanModifyStr);
+   }
+
+   private void incrementImportedCount() {
+      importedCount++;
+   }
+
+   public List<ImportHistoryDTO> getImportHistory(int from, int size, HttpServletRequest request) {
+      User fromUser = findUserByRequest(request);
+      Pageable page = Pagification.createPageTemplate(from, size);
+      List<ImportHistory> importHistory;
+
+      if (fromUser.getRole() == Role.ADMIN) {
+         importHistory = importHistoryRepository.findAll(page).getContent();
+      } else {
+         importHistory = importHistoryRepository.findAllByUser(fromUser, page).getContent();
+      }
+
+      return importHistory
+            .stream()
+            .map(importHistory1 -> new ImportHistoryDTO(
+                  importHistory1.getId(),
+                  importHistory1.getStatus(),
+                  importHistory1.getImportTime(),
+                  importHistory1.getImportedCount(),
+                  importHistory1.getUser().getId()))
+            .sorted(new Comparator<ImportHistoryDTO>() {
+               @Override
+               public int compare(ImportHistoryDTO o1, ImportHistoryDTO o2) {
+                  return o1.getId().compareTo(o2.getId());
+               }
+            })
+            .toList();
+   }
+
+   public void deleteImportHistory(Long id, HttpServletRequest request) {
+      User fromUser = findUserByRequest(request);
+
+      Optional<ImportHistory> importHistory = importHistoryRepository.findById(id);
+      if (importHistory.isEmpty()) {
+         throw new IllegalArgumentException("Import history not found by id " + id);
+      }
+      if (fromUser.getRole() != Role.ADMIN && fromUser.getId() != importHistory.get().getUser().getId()) {
+         throw new IllegalArgumentException("Only admins or owner can delete import history");
+      }
+      importHistoryRepository.deleteById(id);
+      simpMessagingTemplate.convertAndSend("/topic", "Import history deleted");
+   }
+
+   private User findUserByRequest(HttpServletRequest request) {
+      String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
+      return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
    }
 
 }
