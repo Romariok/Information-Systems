@@ -51,7 +51,8 @@ public class PersonService {
             })
             .toList();
    }
-
+   
+   @Transactional
    public PersonDTO createPerson(CreatePersonDTO createPersonDTO, HttpServletRequest request) {
 
       Location location = locationRepository.findById(createPersonDTO.getLocationId())
@@ -83,6 +84,7 @@ public class PersonService {
       return toPersonDTO(person);
    }
 
+   @Transactional
    public PersonDTO alterPerson(Long personId, AlterPersonDTO alterPersonDTO, HttpServletRequest request) {
       Person person = personRepository.findById(personId)
             .orElseThrow(() -> new PersonNotFoundException(
@@ -120,6 +122,7 @@ public class PersonService {
       return toPersonDTO(person);
    }
 
+   @Transactional
    public void deletePerson(Long personId, HttpServletRequest request) {
       Person person = personRepository.findById(personId)
             .orElseThrow(() -> new PersonNotFoundException(

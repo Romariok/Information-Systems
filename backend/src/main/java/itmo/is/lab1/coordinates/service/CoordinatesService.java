@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
@@ -20,7 +21,6 @@ import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -51,7 +51,7 @@ public class CoordinatesService {
             })
             .toList();
    }
-   
+
    @Transactional
    public CoordinatesDTO createCoordinate(CreateCoordinatesDTO createCoordinatesDTO, HttpServletRequest request) {
       if (coordinatesRepository.existsByXAndY(
@@ -130,7 +130,9 @@ public class CoordinatesService {
 
    private boolean checkPermission(Coordinates coordinates, HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
-      User fromUser = userRepository.findByUsername(username).get();
+      User fromUser = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                  String.format("Username %s not found", username)));
       return coordinates.getUser().getUsername().equals(username) || fromUser.getRole() == Role.ADMIN &&
             coordinates.getAdminCanModify();
    }

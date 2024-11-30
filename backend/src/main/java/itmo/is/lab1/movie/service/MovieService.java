@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
@@ -27,12 +30,12 @@ import itmo.is.lab1.user.model.Role;
 import itmo.is.lab1.user.model.User;
 import itmo.is.lab1.utils.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class, propagation = Propagation.NESTED)
 public class MovieService {
    private final PersonRepository personRepository;
    private final CoordinatesRepository coordinatesRepository;
@@ -195,7 +198,6 @@ public class MovieService {
       return toMovieDTO(movie);
    }
 
-   @Transactional
    public void deleteMovie(Long movieId, HttpServletRequest request) {
       Movie movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new CoordinatesNotFoundException(

@@ -1,0 +1,27 @@
+movies:
+  - name: Despicable Me 3
+    coordinates:
+      x: 6
+      adminCanModify: false
+    oscarsCount: 0
+    budget: 33
+    totalBoxOffice: 33
+    mpaaRating: G
+    director:
+      name: MAMA
+      weight: 5343
+      nationality: UNITED_KINGDOM
+      eyeColor: BLUE
+      hairColor: BLUE
+      location:
+        name: something new
+        x: 46.3
+        y: 9
+        z: -3
+        adminCanModify: false
+      adminCanModify: false
+    length: 95
+    goldenPalmCount: 2
+    usaBoxOffice: 1000000
+    tagline: "The Minions are back!"
+    adminCanModify: true
