@@ -49,6 +49,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class, propagation = Propagation.NESTED)
 public class ImportService {
    private final CoordinatesRepository coordinatesRepository;
    private final LocationRepository locationRepository;
@@ -60,7 +61,7 @@ public class ImportService {
    private final JwtUtils jwtUtils;
    private int importedCount = 0;
 
-   @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
+   
    public void importFile(MultipartFile file, HttpServletRequest request) throws IOException {
       importedCount = 0;
       Yaml yaml = new Yaml();
@@ -110,7 +111,7 @@ public class ImportService {
       importHistoryRepository.save(importHistory);
    }
 
-   @Transactional(propagation = Propagation.MANDATORY)
+   
    private Coordinates parseAndSaveCoordinate(HashMap<String, Object> coordData, User user, boolean inner) {
       if (!coordData.containsKey("x") || !coordData.containsKey("adminCanModify")) {
          throw new IllegalArgumentException("Coordinate data is missing. X and adminCanModify are required");
@@ -172,7 +173,7 @@ public class ImportService {
       return coordinate;
    }
 
-   @Transactional(propagation = Propagation.MANDATORY)
+   
    private Location parseAndSaveLocation(HashMap<String, Object> locationData, User user, boolean inner) {
       if (!locationData.containsKey("name") || !locationData.containsKey("x")
             || !locationData.containsKey("z") || !locationData.containsKey("adminCanModify")) {
@@ -258,7 +259,7 @@ public class ImportService {
    }
 
    @SuppressWarnings("unchecked")
-   @Transactional(propagation = Propagation.MANDATORY)
+   
    private Movie parseAndSaveMovie(HashMap<String, Object> movieData, User user) {
       if (!movieData.containsKey("name") || !movieData.containsKey("adminCanModify")
             || !movieData.containsKey("coordinates")
@@ -411,8 +412,8 @@ public class ImportService {
          throw new IllegalArgumentException("Budget must be non-negative");
       }
 
-      if (movieRepository.existsByName(movie.getName())) {
-         throw new MovieAlreadyExistException(String.format("Movie %s already exists", movie.getName()));
+      if (movieRepository.existsByName(name)) {
+         throw new MovieAlreadyExistException(String.format("Movie %s already exists", name));
       }
 
       movie.setName(name);
@@ -439,7 +440,7 @@ public class ImportService {
    }
 
    @SuppressWarnings("unchecked")
-   @Transactional(propagation = Propagation.MANDATORY)
+   
    private Person parseAndSavePerson(HashMap<String, Object> personData, User user, boolean inner) {
       if (!personData.containsKey("name") || !personData.containsKey("weight")
             || !personData.containsKey("nationality") || !personData.containsKey("eyeColor")
