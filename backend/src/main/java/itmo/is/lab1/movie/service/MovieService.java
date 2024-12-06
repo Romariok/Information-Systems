@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+import org.postgresql.util.PSQLException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import itmo.is.lab1.Pagification;
@@ -35,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class, propagation = Propagation.NESTED)
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class MovieService {
    private final PersonRepository personRepository;
    private final CoordinatesRepository coordinatesRepository;
@@ -73,30 +75,57 @@ public class MovieService {
             .toList();
    }
 
+   @Transactional(readOnly = true)
+   public Coordinates findCoordinatesById(Long id) {
+      return coordinatesRepository.findById(id)
+            .orElseThrow(() -> new CoordinatesNotFoundException(
+                  String.format("Coordinates with id %s not found", id)));
+   }
+
+   @Transactional(readOnly = true)
+   private Person findDirectorById(Long directorId) {
+      return personRepository.findById(directorId)
+            .orElseThrow(() -> new PersonNotFoundException(
+                  String.format("Person with id %s not found", directorId)));
+   }
+
+   @Transactional(readOnly = true)
+   private Person findScreenwriterById(Long screenwriterId) {
+      if (screenwriterId == null) {
+         return null;
+      }
+      return personRepository.findById(screenwriterId)
+            .orElseThrow(() -> new PersonNotFoundException(
+                  String.format("Person with id %s not found", screenwriterId)));
+   }
+
+   @Transactional(readOnly = true)
+   private Person findOperatorById(Long operatorId) {
+      if (operatorId == null) {
+         return null;
+      }
+      return personRepository.findById(operatorId)
+            .orElseThrow(() -> new PersonNotFoundException(
+                  String.format("Person with id %s not found", operatorId)));
+   }
+
+   @Retryable(value = { PSQLException.class }, maxAttempts = 4, backoff = @Backoff(delay = 100, multiplier = 2))
    public MovieDTO createMovie(CreateMovieDTO createMovieDTO, HttpServletRequest request) {
       if (movieRepository.existsByName(createMovieDTO.getName()))
          throw new MovieAlreadyExistException(String.format("Movie %s already exists", createMovieDTO.getName()));
 
-      Coordinates coordinate = coordinatesRepository.findById(createMovieDTO.getCoordinatesId())
-            .orElseThrow(() -> new CoordinatesNotFoundException(
-                  String.format("Coordinates with id %s not found", createMovieDTO.getCoordinatesId())));
+      Coordinates coordinate = findCoordinatesById(createMovieDTO.getCoordinatesId());
 
-      Person director = personRepository.findById(createMovieDTO.getDirectorId())
-            .orElseThrow(() -> new PersonNotFoundException(
-                  String.format("Person with id %s not found", createMovieDTO.getDirectorId())));
+      Person director = findDirectorById(createMovieDTO.getDirectorId());
 
       Person screenwriter = null;
       if (createMovieDTO.getScreenwriterId() != null) {
-         screenwriter = personRepository.findById(createMovieDTO.getScreenwriterId())
-               .orElseThrow(() -> new PersonNotFoundException(
-                     String.format("Person with id %s not found", createMovieDTO.getScreenwriterId())));
+         screenwriter = findScreenwriterById(createMovieDTO.getScreenwriterId());
       }
 
       Person operator = null;
       if (createMovieDTO.getOperatorId() != null) {
-         operator = personRepository.findById(createMovieDTO.getOperatorId())
-               .orElseThrow(() -> new PersonNotFoundException(
-                     String.format("Person with id %s not found", createMovieDTO.getOperatorId())));
+         operator = findOperatorById(createMovieDTO.getOperatorId());
       }
 
       User user = findUserByRequest(request);
@@ -127,7 +156,7 @@ public class MovieService {
 
       return toMovieDTO(movie);
    }
-
+   @Retryable(value = { PSQLException.class }, maxAttempts = 4, backoff = @Backoff(delay = 100, multiplier = 2))
    public MovieDTO alterMovie(Long movieId, AlterMovieDTO alterMovieDTO, HttpServletRequest request) {
       Movie movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new CoordinatesNotFoundException(
@@ -140,9 +169,7 @@ public class MovieService {
          movie.setName(alterMovieDTO.getName());
 
       if (alterMovieDTO.getCoordinatesId() != null) {
-         Coordinates coordinates = coordinatesRepository.findById(alterMovieDTO.getCoordinatesId())
-               .orElseThrow(() -> new CoordinatesNotFoundException(
-                     String.format("Coordinates with id %s not found", alterMovieDTO.getCoordinatesId())));
+         Coordinates coordinates = findCoordinatesById(alterMovieDTO.getCoordinatesId());
          movie.setCoordinates(coordinates);
       }
 
@@ -158,27 +185,19 @@ public class MovieService {
          movie.setMpaaRating(alterMovieDTO.getMpaaRating());
 
       if (alterMovieDTO.getDirectorId() != null) {
-         Person director = personRepository.findById(alterMovieDTO.getDirectorId())
-               .orElseThrow(() -> new PersonNotFoundException(
-                     String.format("Person with id %s not found", alterMovieDTO.getDirectorId())));
+         Person director = findDirectorById(alterMovieDTO.getDirectorId());
          movie.setDirector(director);
       }
       if (alterMovieDTO.getScreenwriterId() != null) {
-         Person screenwriter = personRepository.findById(alterMovieDTO.getScreenwriterId())
-               .orElseThrow(() -> new PersonNotFoundException(
-                     String.format("Person with id %s not found", alterMovieDTO.getScreenwriterId())));
+         Person screenwriter = findScreenwriterById(alterMovieDTO.getScreenwriterId());
          movie.setScreenwriter(screenwriter);
-      }
-      else{
+      } else {
          movie.setScreenwriter(null);
       }
       if (alterMovieDTO.getOperatorId() != null) {
-         Person operator = personRepository.findById(alterMovieDTO.getOperatorId())
-               .orElseThrow(() -> new PersonNotFoundException(
-                     String.format("Person with id %s not found", alterMovieDTO.getOperatorId())));
+         Person operator = findOperatorById(alterMovieDTO.getOperatorId());
          movie.setOperator(operator);
-      }
-      else{
+      } else {
          movie.setOperator(null);
       }
       if (alterMovieDTO.getLength() != null)
@@ -197,7 +216,7 @@ public class MovieService {
       simpMessagingTemplate.convertAndSend("/topic", "Movie updated");
       return toMovieDTO(movie);
    }
-
+   @Retryable(value = { PSQLException.class }, maxAttempts = 4, backoff = @Backoff(delay = 100, multiplier = 2))
    public void deleteMovie(Long movieId, HttpServletRequest request) {
       Movie movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new CoordinatesNotFoundException(
@@ -353,6 +372,7 @@ public class MovieService {
             .build();
    }
 
+   
    private User findUserByRequest(HttpServletRequest request) {
       String username = jwtUtils.getUserNameFromJwtToken(jwtUtils.parseJwt(request));
       return userRepository.findByUsername(username)

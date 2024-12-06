@@ -7,10 +7,10 @@ export const options = {
   scenarios: {
     concurrent_users: {
       executor: 'ramping-vus',
-      startVUs: 0,
+      startVUs: 4,
       stages: [
-        { duration: '10s', target: 2 },
-        { duration: '20s', target: 2 },
+        { duration: '10s', target: 10 },
+        { duration: '20s', target: 10 },
         { duration: '1s', target: 0 },
       ],
     },

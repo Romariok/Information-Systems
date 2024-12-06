@@ -49,7 +49,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class, propagation = Propagation.NESTED)
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class ImportService {
    private final CoordinatesRepository coordinatesRepository;
    private final LocationRepository locationRepository;
@@ -440,7 +440,6 @@ public class ImportService {
    }
 
    @SuppressWarnings("unchecked")
-   
    private Person parseAndSavePerson(HashMap<String, Object> personData, User user, boolean inner) {
       if (!personData.containsKey("name") || !personData.containsKey("weight")
             || !personData.containsKey("nationality") || !personData.containsKey("eyeColor")
