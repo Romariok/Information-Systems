@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import io.minio.errors.MinioException;
+
 @RestControllerAdvice
 public class GlobalControllerExceptionHandler {
 
@@ -37,6 +39,13 @@ public class GlobalControllerExceptionHandler {
    @ExceptionHandler
    @ResponseStatus(HttpStatus.BAD_REQUEST)
    public ErrorResponse handleLocationAlreadyExistException(LocationAlreadyExistException e) {
+      return new ErrorResponse(e.getClass().getCanonicalName(),
+            e.getMessage());
+   }
+
+   @ExceptionHandler
+   @ResponseStatus(HttpStatus.BAD_REQUEST)
+   public ErrorResponse handleMinioException(MinioException e) {
       return new ErrorResponse(e.getClass().getCanonicalName(),
             e.getMessage());
    }

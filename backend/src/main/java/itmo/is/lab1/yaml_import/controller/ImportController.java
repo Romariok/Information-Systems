@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.minio.errors.MinioException;
 import itmo.is.lab1.security.jwt.JwtUtils;
 import itmo.is.lab1.user.dao.UserRepository;
 import itmo.is.lab1.user.model.User;
@@ -49,6 +50,7 @@ public class ImportController {
          importHistory.setUser(user);
          importHistory.setImportTime(LocalDateTime.now());
          importHistory.setImportedCount(0);
+         importHistory.setFileUrl(null);
          importHistoryRepository.save(importHistory);
          simpMessagingTemplate.convertAndSend("/topic", "Import failed");
          return ResponseEntity.badRequest().body("File is empty");
@@ -60,6 +62,7 @@ public class ImportController {
       } catch (Exception e) {
          importHistory.setStatus(OperationStatus.FAILURE);
          importHistory.setUser(user);
+         importHistory.setFileUrl(null);
          importHistory.setImportTime(LocalDateTime.now());
          importHistory.setImportedCount(0);
          importHistoryRepository.save(importHistory);

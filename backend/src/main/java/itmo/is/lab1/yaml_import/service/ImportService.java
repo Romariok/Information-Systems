@@ -15,10 +15,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.Yaml;
 
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.errors.MinioException;
 import itmo.is.lab1.Pagification;
 import itmo.is.lab1.coordinates.dao.CoordinatesRepository;
 import itmo.is.lab1.coordinates.model.Coordinates;
@@ -60,58 +62,99 @@ public class ImportService {
    private final SimpMessagingTemplate simpMessagingTemplate;
    private final JwtUtils jwtUtils;
    private int importedCount = 0;
+   private final MinioClient minioClient;
 
-   
-   public void importFile(MultipartFile file, HttpServletRequest request) throws IOException {
+   public void importFile(MultipartFile file, HttpServletRequest request) throws Exception {
       importedCount = 0;
-      Yaml yaml = new Yaml();
-      InputStream inputStream = file.getInputStream();
-      HashMap<String, List<HashMap<String, Object>>> data = yaml.load(inputStream);
       User user = findUserByRequest(request);
-      if (data.containsKey("coordinates")) {
-         List<HashMap<String, Object>> coordinatesList = data.get("coordinates");
-         if (coordinatesList == null) {
-            throw new IllegalArgumentException("Coordinates list is empty");
+
+      ImportHistory importHistory = ImportHistory.builder().user(user).build();
+      String userFileName = user.getUsername() +"_" + System.currentTimeMillis() + "/" + file.getOriginalFilename();
+
+      try {
+         try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                  PutObjectArgs.builder()
+                        .bucket("romariok-drive")
+                        .object(userFileName)
+                        .stream(inputStream, file.getSize(), -1)
+                        .contentType(file.getContentType())
+                        .build());
          }
-         for (HashMap<String, Object> coordData : coordinatesList) {
-            parseAndSaveCoordinate(coordData, user, false);
-         }
-      }
-      if (data.containsKey("locations")) {
-         List<HashMap<String, Object>> locationsList = data.get("locations");
-         if (locationsList == null) {
-            throw new IllegalArgumentException("Locations list is empty");
-         }
-         for (HashMap<String, Object> locationData : locationsList) {
-            parseAndSaveLocation(locationData, user, false);
-         }
-      }
-      if (data.containsKey("persons")) {
-         List<HashMap<String, Object>> personsList = data.get("persons");
-         if (personsList == null) {
-            throw new IllegalArgumentException("Persons list is empty");
-         }
-         for (HashMap<String, Object> personData : personsList) {
-            parseAndSavePerson(personData, user, false);
-         }
+         String fileUrl = minioClient.getPresignedObjectUrl(
+               io.minio.GetPresignedObjectUrlArgs.builder()
+                     .method(io.minio.http.Method.GET)
+                     .bucket("romariok-drive")
+                     .object(userFileName)
+                     .build());
+         importHistory.setFileUrl(fileUrl);
+      } catch (MinioException e) {
+         throw new Exception("Error uploading file to MinIO: " + e.getMessage());
       }
 
-      if (data.containsKey("movies")) {
-         List<HashMap<String, Object>> moviesList = data.get("movies");
-         if (moviesList == null) {
-            throw new IllegalArgumentException("Movies list is empty");
+      try (InputStream inputStream = file.getInputStream()) {
+         Yaml yaml = new Yaml();
+         HashMap<String, List<HashMap<String, Object>>> data = yaml.load(inputStream);
+
+         if (data.containsKey("coordinates")) {
+            List<HashMap<String, Object>> coordinatesList = data.get("coordinates");
+            if (coordinatesList == null) {
+               throw new IllegalArgumentException("Coordinates list is empty");
+            }
+            for (HashMap<String, Object> coordData : coordinatesList) {
+               parseAndSaveCoordinate(coordData, user, false);
+            }
          }
-         for (HashMap<String, Object> movieData : moviesList) {
-            parseAndSaveMovie(movieData, user);
+         if (data.containsKey("locations")) {
+            List<HashMap<String, Object>> locationsList = data.get("locations");
+            if (locationsList == null) {
+               throw new IllegalArgumentException("Locations list is empty");
+            }
+            for (HashMap<String, Object> locationData : locationsList) {
+               parseAndSaveLocation(locationData, user, false);
+            }
          }
+         if (data.containsKey("persons")) {
+            List<HashMap<String, Object>> personsList = data.get("persons");
+            if (personsList == null) {
+               throw new IllegalArgumentException("Persons list is empty");
+            }
+            for (HashMap<String, Object> personData : personsList) {
+               parseAndSavePerson(personData, user, false);
+            }
+         }
+
+         if (data.containsKey("movies")) {
+            List<HashMap<String, Object>> moviesList = data.get("movies");
+            if (moviesList == null) {
+               throw new IllegalArgumentException("Movies list is empty");
+            }
+            for (HashMap<String, Object> movieData : moviesList) {
+               parseAndSaveMovie(movieData, user);
+            }
+         }
+         simpMessagingTemplate.convertAndSend("/topic", "Import completed");
+         importHistory.setImportedCount(importedCount);
+         importHistory.setStatus(OperationStatus.SUCCESS);
+         importHistory.setImportTime(LocalDateTime.now());
+         importHistoryRepository.save(importHistory);
+      } catch (Exception e) {
+         try {
+            minioClient.removeObject(
+                  io.minio.RemoveObjectArgs.builder()
+                        .bucket("romariok-drive")
+                        .object(userFileName)
+                        .build());
+            minioClient.removeObject(io.minio.RemoveObjectArgs.builder().bucket("romariok-drive")
+                  .object(userFileName.substring(0, userFileName.lastIndexOf('/'))).build());
+         } catch (Exception ex) {
+            System.err.println("Failed to delete file from MinIO after rollback: " + ex.getMessage());
+         }
+         throw e;
       }
-      simpMessagingTemplate.convertAndSend("/topic", "Import completed");
-      ImportHistory importHistory = ImportHistory.builder().user(user).importedCount(importedCount)
-            .status(OperationStatus.SUCCESS).importTime(LocalDateTime.now()).build();
-      importHistoryRepository.save(importHistory);
+
    }
 
-   
    private Coordinates parseAndSaveCoordinate(HashMap<String, Object> coordData, User user, boolean inner) {
       if (!coordData.containsKey("x") || !coordData.containsKey("adminCanModify")) {
          throw new IllegalArgumentException("Coordinate data is missing. X and adminCanModify are required");
@@ -173,7 +216,6 @@ public class ImportService {
       return coordinate;
    }
 
-   
    private Location parseAndSaveLocation(HashMap<String, Object> locationData, User user, boolean inner) {
       if (!locationData.containsKey("name") || !locationData.containsKey("x")
             || !locationData.containsKey("z") || !locationData.containsKey("adminCanModify")) {
@@ -259,7 +301,7 @@ public class ImportService {
    }
 
    @SuppressWarnings("unchecked")
-   
+
    private Movie parseAndSaveMovie(HashMap<String, Object> movieData, User user) {
       if (!movieData.containsKey("name") || !movieData.containsKey("adminCanModify")
             || !movieData.containsKey("coordinates")
@@ -568,7 +610,8 @@ public class ImportService {
                   importHistory1.getStatus(),
                   importHistory1.getImportTime(),
                   importHistory1.getImportedCount(),
-                  importHistory1.getUser().getId()))
+                  importHistory1.getUser().getId(),
+                  importHistory1.getFileUrl()))
             .sorted(new Comparator<ImportHistoryDTO>() {
                @Override
                public int compare(ImportHistoryDTO o1, ImportHistoryDTO o2) {

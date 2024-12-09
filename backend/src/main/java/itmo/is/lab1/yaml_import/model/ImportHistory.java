@@ -27,6 +27,9 @@ public class ImportHistory {
    @Column(name = "imported_count")
    private Integer importedCount;
 
+   @Column(name = "file_url", length = 1024)
+   private String fileUrl;
+
    @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "user_id")
    private User user;
