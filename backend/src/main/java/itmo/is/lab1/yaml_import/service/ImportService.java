@@ -1,6 +1,5 @@
 package itmo.is.lab1.yaml_import.service;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
