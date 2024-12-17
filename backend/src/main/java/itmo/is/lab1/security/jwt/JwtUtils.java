@@ -40,7 +40,7 @@ public class JwtUtils {
             return null;
         }
     }
-
+    @SuppressWarnings("deprecation")
     public boolean validateJwtToken(String authToken) {
         try {
             getParsedToken(authToken);

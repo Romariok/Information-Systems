@@ -1,5 +1,3 @@
-all: back minio
-
 back:
 	mvn spring-boot:run -X
 

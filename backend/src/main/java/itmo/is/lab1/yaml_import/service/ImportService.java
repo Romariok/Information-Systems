@@ -94,7 +94,6 @@ public class ImportService {
       try (InputStream inputStream = file.getInputStream()) {
          Yaml yaml = new Yaml();
          HashMap<String, List<HashMap<String, Object>>> data = yaml.load(inputStream);
-
          if (data.containsKey("coordinates")) {
             List<HashMap<String, Object>> coordinatesList = data.get("coordinates");
             if (coordinatesList == null) {
